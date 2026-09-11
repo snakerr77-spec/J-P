@@ -1,0 +1,222 @@
+import type { Candidate, CandidateStatus, InterviewEvent } from './types';
+
+export const AUTH_KEY = 'medRecruitAdminLogged';
+export const STORAGE_KEY = 'medRecruitCandidates_v3';
+export const PROFILE_KEY = 'jpRecruitUserProfile_v1';
+export const SIDEBAR_KEY = 'jpSidebarCollapsed_v1';
+export const THEME_KEY = 'jpThemeMode_v1';
+export const AGENDA_KEY = 'jpRecruitInterviewAgenda_v1';
+
+export const statusMap: Record<CandidateStatus, { label: string; className: string }> = {
+  novo: { label: 'Novo', className: 'status-new' },
+  analise: { label: 'Em análise', className: 'status-review' },
+  entrevista: { label: 'Entrevista', className: 'status-interview' },
+  aguardando: { label: 'Decisão de contratação', className: 'status-waiting' },
+  aprovado: { label: 'Aprovado', className: 'status-approved' },
+  reprovado: { label: 'Reprovado', className: 'status-rejected' }
+};
+
+export const seedCandidates: Candidate[] = [
+  {
+    id: 1,
+    profileType: 'medico',
+    name: 'Dra. Mariana Costa',
+    initials: 'MC',
+    specialty: 'Cardiologia',
+    city: 'São Paulo',
+    crm: 'CRM/SP 123456',
+    rqe: 'RQE 44521',
+    status: 'analise',
+    statusLabel: 'Em análise',
+    email: 'mariana.costa@email.com',
+    phone: '(11) 99999-0000',
+    experience: '8 anos',
+    availability: 'Seg a Sex • Tarde',
+    createdAt: '2026-08-08T13:22:00-03:00',
+    notes: 'Perfil com boa experiência hospitalar e disponibilidade para início imediato.',
+    curriculum: [
+      'Especialista em Cardiologia com atuação clínica e hospitalar.',
+      'Passagem por pronto atendimento e ambulatório especializado.',
+      'Experiência em liderança de equipe multidisciplinar.'
+    ],
+    documents: []
+  },
+  {
+    id: 2,
+    profileType: 'medico',
+    name: 'Teste 2',
+    initials: 'T2',
+    specialty: 'Cardio',
+    city: 'Cerquilho',
+    crm: 'sadadsaad',
+    rqe: 'Não informado',
+    status: 'analise',
+    statusLabel: 'Em análise',
+    email: 'Teste2@gmail.com',
+    phone: '(15) 99999-0002',
+    experience: 'Não informado',
+    availability: 'A combinar',
+    createdAt: '2026-08-08T11:14:00-03:00',
+    notes: 'Candidato em avaliação curricular.',
+    curriculum: ['Perfil em análise pela equipe de recrutamento.'],
+    documents: []
+  },
+  {
+    id: 3,
+    profileType: 'medico',
+    name: 'Teste',
+    initials: 'T',
+    specialty: 'Neurologista',
+    city: 'Cerquilho',
+    crm: 'SDdss/SP',
+    rqe: 'Não informado',
+    status: 'novo',
+    statusLabel: 'Novo',
+    email: 'Teste@gmail.com',
+    phone: '(15) 99999-0003',
+    experience: 'Não informado',
+    availability: 'A combinar',
+    createdAt: '2026-08-08T09:14:00-03:00',
+    notes: 'Nova candidatura.',
+    curriculum: ['Candidatura recebida recentemente.'],
+    documents: []
+  },
+  {
+    id: 4,
+    profileType: 'medico',
+    name: 'Dr. Lucas Amaral',
+    initials: 'LA',
+    specialty: 'Clínica Geral',
+    city: 'Cerquilho',
+    crm: 'CRM/SP 145877',
+    rqe: 'Não informado',
+    status: 'reprovado',
+    statusLabel: 'Reprovado',
+    email: 'lucas.amaral@email.com',
+    phone: '(15) 99880-3434',
+    experience: '4 anos',
+    availability: 'Seg a Sab • Manhã',
+    createdAt: '2026-08-07T10:14:00-03:00',
+    notes: 'Processo encerrado após avaliação interna.',
+    curriculum: ['Atuação em clínica geral e medicina de família.', 'Experiência em atendimento ambulatorial e plantões.'],
+    documents: []
+  },
+  {
+    id: 5,
+    profileType: 'medico',
+    name: 'Dra. Ana Ribeiro',
+    initials: 'AR',
+    specialty: 'Neurologia',
+    city: 'Tatuí',
+    crm: 'CRM/SP 138721',
+    rqe: 'RQE 39110',
+    status: 'aprovado',
+    statusLabel: 'Aprovado',
+    email: 'ana.ribeiro@email.com',
+    phone: '(15) 99781-3301',
+    experience: '10 anos',
+    availability: 'Ter e Qui • Integral',
+    createdAt: '2026-08-06T16:40:00-03:00',
+    notes: 'Aprovada após entrevista e avaliação técnica.',
+    curriculum: ['Especialista em Neurologia com foco em atendimento ambulatorial.', 'Experiência em diagnóstico e acompanhamento clínico.'],
+    documents: []
+  },
+  {
+    id: 6,
+    profileType: 'medico',
+    name: 'Dr. Rafael Mendes',
+    initials: 'RM',
+    specialty: 'Pediatria',
+    city: 'Itapeva',
+    crm: 'CRM/SP 119882',
+    rqe: 'RQE 44209',
+    status: 'entrevista',
+    statusLabel: 'Entrevista',
+    email: 'rafael.mendes@email.com',
+    phone: '(15) 99690-1180',
+    experience: '6 anos',
+    availability: 'Seg a Sex • Tarde',
+    createdAt: '2026-08-05T09:35:00-03:00',
+    notes: 'Entrevista agendada para próxima etapa.',
+    curriculum: ['Experiência em pediatria clínica e atendimento de rotina.', 'Vivência hospitalar e em pronto atendimento pediátrico.'],
+    documents: []
+  },
+  {
+    id: 7,
+    profileType: 'medico',
+    name: 'Dra. Camila Duarte',
+    initials: 'CD',
+    specialty: 'Ginecologia',
+    city: 'Sorocaba',
+    crm: 'CRM/SP 112233',
+    rqe: 'RQE 52218',
+    status: 'analise',
+    statusLabel: 'Em análise',
+    email: 'camila.duarte@email.com',
+    phone: '(15) 98841-2250',
+    experience: '7 anos',
+    availability: 'Qua e Sex • Manhã',
+    createdAt: '2026-08-04T11:05:00-03:00',
+    notes: 'Perfil em avaliação pela equipe.',
+    curriculum: ['Atuação em ginecologia clínica e preventiva.', 'Experiência em consultório e ambulatório.'],
+    documents: []
+  },
+  {
+    id: 8,
+    profileType: 'colaborador',
+    name: 'Juliana Martins',
+    initials: 'JM',
+    specialty: 'Recepção / Atendimento',
+    city: 'Cerquilho',
+    crm: 'Não se aplica',
+    rqe: 'Não se aplica',
+    status: 'entrevista',
+    statusLabel: 'Entrevista',
+    email: 'juliana.martins@email.com',
+    phone: '(15) 99770-1144',
+    experience: '3 anos',
+    availability: 'Seg a Sex • Integral',
+    createdAt: '2026-08-09T09:00:00-03:00',
+    notes: 'Candidatura para área de atendimento e recepção.',
+    curriculum: ['Experiência em atendimento ao público e rotinas administrativas.', 'Conhecimento de organização de agenda e suporte ao cliente.'],
+    documents: []
+  }
+];
+
+
+export const seedInterviewEvents: InterviewEvent[] = [
+  {
+    id: 'agenda-medico-rafael',
+    audience: 'medico',
+    candidateId: 6,
+    personName: 'Dr. Rafael Mendes',
+    role: 'Pediatria',
+    email: 'rafael.mendes@email.com',
+    phone: '(15) 99690-1180',
+    date: '2026-09-07',
+    time: '09:30',
+    duration: 45,
+    interviewer: 'Equipe de recrutamento',
+    location: 'Videochamada',
+    notes: 'Entrevista para alinhamento de disponibilidade e experiência clínica.',
+    status: 'confirmada',
+    createdAt: '2026-09-03T10:00:00-03:00'
+  },
+  {
+    id: 'agenda-colaborador-recepcao',
+    audience: 'colaborador',
+    candidateId: 8,
+    personName: 'Juliana Martins',
+    role: 'Recepção / Atendimento',
+    email: 'juliana.martins@email.com',
+    phone: '(15) 99770-1144',
+    date: '2026-09-08',
+    time: '14:00',
+    duration: 30,
+    interviewer: 'Equipe de recrutamento',
+    location: 'Sala de reunião',
+    notes: 'Entrevista inicial para vaga administrativa.',
+    status: 'agendada',
+    createdAt: '2026-09-03T11:00:00-03:00'
+  }
+];
