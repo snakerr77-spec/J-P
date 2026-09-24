@@ -1,0 +1,6 @@
+## Copie este arquivo para ".dev.vars" (ignorado pelo git) e preencha os valores
+## antes de rodar `npm run dev:worker` ou `wrangler dev`.
+
+# Chave secreta usada para assinar o cookie de sessão (login do painel).
+# Gere uma aleatória, por exemplo com: openssl rand -base64 48
+AUTH_SECRET=troque-por-uma-chave-aleatoria-longa

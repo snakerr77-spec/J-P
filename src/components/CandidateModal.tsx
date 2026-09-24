@@ -1,14 +1,13 @@
 import { BriefcaseBusiness, CalendarDays, Clock3, MapPin, Stethoscope, UserRound } from 'lucide-react';
 import { Icons } from '../icons';
 import { formatPhoneDisplay } from '../phone';
-import { openStoredDocument } from '../storage';
+import { documentUrl } from '../api';
 import type { Candidate, InterviewEvent } from '../types';
 
 type Props = {
   candidate: Candidate | null;
   interviewEvents?: InterviewEvent[];
   onClose: () => void;
-  onToast: (message: string) => void;
 };
 
 const interviewStatusLabel = {
@@ -20,7 +19,7 @@ const interviewStatusLabel = {
   cancelada: 'Cancelada'
 } as const;
 
-export default function CandidateModal({ candidate, interviewEvents = [], onClose, onToast }: Props) {
+export default function CandidateModal({ candidate, interviewEvents = [], onClose }: Props) {
   if (!candidate) return null;
 
   const scheduledInterview = interviewEvents
@@ -64,12 +63,9 @@ export default function CandidateModal({ candidate, interviewEvents = [], onClos
           <div className="modal-section-title"><strong>Documentos</strong><span>{candidate.documents.length} arquivos</span></div>
           <div className="document-list">
             {candidate.documents.length ? candidate.documents.map(doc => (
-              <button key={doc.key} type="button" className="document-item" onClick={async () => {
-                try { await openStoredDocument(doc); }
-                catch { onToast('Não foi possível abrir este documento neste navegador.'); }
-              }}>
+              <a key={doc.id} href={documentUrl(doc.id)} target="_blank" rel="noopener noreferrer" className="document-item">
                 <Icons.File size={18}/><span><strong>{doc.label}</strong><small>{doc.name}</small></span><Icons.External size={16}/>
-              </button>
+              </a>
             )) : <div className="empty-document">Este perfil ainda não enviou documentos.</div>}
           </div>
         </div>

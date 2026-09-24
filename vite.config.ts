@@ -7,5 +7,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true
+  },
+  server: {
+    // Em desenvolvimento, o Vite serve o front-end com hot reload e encaminha
+    // as chamadas de API para o Worker local (`npm run dev:worker`, porta 8787).
+    proxy: {
+      '/api': 'http://127.0.0.1:8787'
+    }
   }
 });

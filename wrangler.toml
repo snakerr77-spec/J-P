@@ -1,0 +1,29 @@
+name = "jp-recrutamento"
+main = "worker/index.ts"
+compatibility_date = "2026-09-24"
+
+# Frontend (build gerado pelo Vite) servido como assets estáticos.
+# O Worker só é acionado para as rotas /api/*; todo o resto (inclusive
+# o fallback de SPA) é resolvido diretamente pelos assets.
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+# Banco D1 — dados de candidatos, entrevistas e metadados de documentos.
+# Crie com `wrangler d1 create jp-recrutamento-db` e substitua o database_id abaixo
+# pelo id retornado (veja README.md).
+[[d1_databases]]
+binding = "DB"
+database_name = "jp-recrutamento-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Bucket R2 — armazena os PDFs/imagens enviados pelos candidatos.
+# Crie com `wrangler r2 bucket create jp-recrutamento-documentos` (veja README.md).
+[[r2_buckets]]
+binding = "DOCUMENTS_BUCKET"
+bucket_name = "jp-recrutamento-documentos"
+
+# AUTH_SECRET é um segredo (chave usada para assinar o cookie de sessão), não uma var.
+# Local: copie .dev.vars.example para .dev.vars e defina um valor.
+# Produção: `wrangler secret put AUTH_SECRET`.

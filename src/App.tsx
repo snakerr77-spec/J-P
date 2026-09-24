@@ -2,39 +2,37 @@ import { useEffect, useState } from 'react';
 import Dashboard from './components/Dashboard';
 import LoginPage from './components/LoginPage';
 import ApplicationPage from './components/ApplicationPage';
-import { AUTH_KEY } from './data';
-import type { CandidateType } from './types';
+import { authApi } from './api';
+import type { CandidateType, UserProfile } from './types';
 
-type Route = 'login' | 'dashboard' | 'application-medico' | 'application-colaborador';
-
-function routeFromHash(): Route {
+function publicApplicationType(): CandidateType | null {
   const hash = window.location.hash.toLowerCase();
-  if (hash.includes('/candidatura/medico')) return 'application-medico';
-  if (hash.includes('/candidatura/colaborador')) return 'application-colaborador';
-  if (hash.includes('dashboard')) return 'dashboard';
-  return localStorage.getItem(AUTH_KEY) === '1' ? 'dashboard' : 'login';
+  if (hash.includes('/candidatura/medico')) return 'medico';
+  if (hash.includes('/candidatura/colaborador')) return 'colaborador';
+  return null;
 }
 
 export default function App() {
-  const [route, setRoute] = useState<Route>(() => routeFromHash());
+  const [applicationType, setApplicationType] = useState<CandidateType | null>(() => publicApplicationType());
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    const sync = () => setRoute(routeFromHash());
+    const sync = () => setApplicationType(publicApplicationType());
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);
 
-  const go = (next: Route) => {
-    const hash = next === 'dashboard'
-      ? '#/dashboard/candidatos'
-      : next === 'application-medico'
-        ? '#/candidatura/medico'
-        : next === 'application-colaborador'
-          ? '#/candidatura/colaborador'
-          : '#/login';
-    if (window.location.hash === hash) setRoute(next);
-    else window.location.hash = hash;
-  };
+  useEffect(() => {
+    if (applicationType) { setCheckingSession(false); return; }
+    let cancelled = false;
+    setCheckingSession(true);
+    authApi.me()
+      .then(({ profile }) => { if (!cancelled) setProfile(profile); })
+      .catch(() => { if (!cancelled) setProfile(null); })
+      .finally(() => { if (!cancelled) setCheckingSession(false); });
+    return () => { cancelled = true; };
+  }, [applicationType]);
 
   const openPublicApplication = (type: CandidateType) => {
     const hash = type === 'medico' ? '#/candidatura/medico' : '#/candidatura/colaborador';
@@ -42,14 +40,27 @@ export default function App() {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  if (route === 'application-medico' || route === 'application-colaborador') {
-    const profileType: CandidateType = route === 'application-medico' ? 'medico' : 'colaborador';
-    return <ApplicationPage profileType={profileType}/>;
+  const handleLogout = () => {
+    setProfile(null);
+    window.location.hash = '#/login';
+  };
+
+  if (applicationType) return <ApplicationPage profileType={applicationType}/>;
+
+  if (checkingSession) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-orbit">
+          <div className="loading-ring" />
+          <div className="loading-brand"><strong>J&amp;P</strong><span>Carregando portal...</span></div>
+        </div>
+      </div>
+    );
   }
 
-  if (route === 'dashboard' && localStorage.getItem(AUTH_KEY) === '1') {
-    return <Dashboard onLogout={() => go('login')} onPublicApplication={openPublicApplication}/>;
+  if (profile) {
+    return <Dashboard initialProfile={profile} onLogout={handleLogout} onPublicApplication={openPublicApplication}/>;
   }
 
-  return <LoginPage onLogin={() => go('dashboard')}/>;
+  return <LoginPage onAuthenticated={setProfile}/>;
 }

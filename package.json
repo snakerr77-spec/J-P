@@ -5,22 +5,30 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:worker": "wrangler dev",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "dev:host": "vite --host 0.0.0.0",
-    "check": "tsc -b --pretty false"
+    "check": "tsc -b --pretty false",
+    "deploy": "npm run build && wrangler deploy",
+    "db:migrations:new": "wrangler d1 migrations create jp-recrutamento-db",
+    "db:migrate:local": "wrangler d1 migrations apply jp-recrutamento-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply jp-recrutamento-db --remote"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "framer-motion": "^11.18.2",
-    "lucide-react": "^0.468.0"
+    "lucide-react": "^0.468.0",
+    "hono": "^4.13.9"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260924.1",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.7.3",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "wrangler": "^4.138.0"
   }
 }

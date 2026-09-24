@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BriefcaseBusiness, Stethoscope } from 'lucide-react';
 import { Icons } from '../icons';
-import { loadCandidates, normalizeCandidate, saveCandidateDocument, saveCandidates, initialsFromName } from '../storage';
+import { ApiError, publicApi } from '../api';
 import { formatPhoneBR } from '../phone';
 import type { CandidateType } from '../types';
 
@@ -62,45 +62,14 @@ export default function ApplicationPage({ profileType }: Props) {
 
     setSubmitting(true);
     setMessage('');
-    const id = Date.now();
-    const documents = [];
+    data.set('profileType', profileType);
     try {
-      for (const field of documentFields) {
-        const files = data.getAll(field.name).filter(value => value instanceof File && value.size > 0) as File[];
-        for (let index = 0; index < files.length; index++) {
-          documents.push(await saveCandidateDocument(id, field.type, field.label, files[index], index));
-        }
-      }
-      const name = String(data.get('name') || '').trim();
-      const availability = String(data.get('availability') || '').trim();
-      const summary = String(data.get('summary') || '').trim();
-      const candidate = normalizeCandidate({
-        id,
-        profileType,
-        name,
-        initials: initialsFromName(name),
-        specialty: String(data.get('specialty') || '').trim() || (profileType === 'medico' ? 'Especialidade não informada' : 'Área não informada'),
-        city: String(data.get('city') || '').trim() || 'Cidade não informada',
-        crm: profileType === 'medico' ? String(data.get('crm') || '').trim() : 'Não se aplica',
-        rqe: profileType === 'medico' ? String(data.get('rqe') || '').trim() || 'Não informado' : 'Não se aplica',
-        status: 'novo',
-        statusLabel: 'Novo',
-        email: String(data.get('email') || '').trim(),
-        phone: formatPhoneBR(String(data.get('phone') || '')),
-        experience: String(data.get('experience') || '').trim() || 'Não informado',
-        availability,
-        createdAt: new Date().toISOString(),
-        documents,
-        notes: `${documents.length} documento(s) anexado(s) na candidatura de ${profileType === 'medico' ? 'médico' : 'colaborador'}.`,
-        curriculum: [summary || 'Resumo profissional não informado.', `Disponibilidade: ${availability}.`, `${documents.length} documento(s) anexado(s).`]
-      });
-      const candidates = loadCandidates();
-      saveCandidates([candidate, ...candidates]);
+      await publicApi.submitApplication(data);
       form.reset();
       setFileNames({});
       setSuccess(true);
-    } catch {
-      setMessage('Não foi possível salvar um dos documentos neste navegador. Tente arquivos menores ou outro navegador.');
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : 'Não foi possível enviar sua candidatura. Tente novamente.');
     } finally {
       setSubmitting(false);
     }

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { BriefcaseBusiness, GripVertical, Stethoscope } from 'lucide-react';
 import type { Candidate, CandidateStatus, CandidateType } from '../types';
-import { formatDate } from '../storage';
+import { formatDate } from '../format';
 
 const columns: { status: CandidateStatus; label: string; hint: string }[] = [
   { status: 'novo', label: 'Novo', hint: 'Candidaturas recebidas' },

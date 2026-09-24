@@ -13,9 +13,9 @@ import Interviews from './Interviews';
 import Settings from './Settings';
 import HiringDecision from './HiringDecision';
 import ApplicationLinks from './ApplicationLinks';
-import { AUTH_KEY, SIDEBAR_KEY, THEME_KEY, STORAGE_KEY, AGENDA_KEY, statusMap } from '../data';
-import { loadCandidates, loadInterviewEvents, loadProfile, saveCandidates, saveInterviewEvents, saveProfile, updateCandidateStatus } from '../storage';
-import type { Candidate, CandidateStatus, CandidateType, InterviewEvent, InterviewLogEntry, InterviewStatus, UserProfile } from '../types';
+import { SIDEBAR_KEY, THEME_KEY, statusMap } from '../data';
+import { ApiError, authApi, candidatesApi, interviewsApi } from '../api';
+import type { Candidate, CandidateStatus, CandidateType, InterviewEvent, InterviewLogEntry, NewCandidateInput, UserProfile } from '../types';
 import { buildNotifications, type AppNotification } from '../notifications';
 
 const moduleCopy: Record<ModuleKey, { eyebrow: string; title: string; subtitle: string }> = {
@@ -31,14 +31,16 @@ const moduleCopy: Record<ModuleKey, { eyebrow: string; title: string; subtitle: 
   settings: { eyebrow: 'Preferências do portal', title: 'Configurações', subtitle: 'Atualize as informações do usuário e mantenha os dados de acesso da equipe organizados.' }
 };
 
-type Props = { onLogout: () => void; onPublicApplication: (type: CandidateType) => void };
+type Props = { initialProfile: UserProfile; onLogout: () => void; onPublicApplication: (type: CandidateType) => void };
 
 const NOTIFICATION_READ_KEY = 'jpRecruitNotificationRead_v1';
 
-export default function Dashboard({ onLogout, onPublicApplication }: Props) {
-  const [candidates, setCandidates] = useState<Candidate[]>(() => loadCandidates());
-  const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
-  const [interviewEvents, setInterviewEvents] = useState<InterviewEvent[]>(() => loadInterviewEvents());
+export default function Dashboard({ initialProfile, onLogout, onPublicApplication }: Props) {
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [profile, setProfile] = useState<UserProfile>(initialProfile);
+  const [interviewEvents, setInterviewEvents] = useState<InterviewEvent[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [dataError, setDataError] = useState('');
   const [active, setActive] = useState<ModuleKey>('candidates');
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_KEY) === '1');
   const [theme, setTheme] = useState<ThemeMode>(() => localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light');
@@ -72,17 +74,16 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
   }, []);
 
   useEffect(() => {
-    const syncExternalChanges = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        const next = loadCandidates();
-        setCandidates(next);
-        const newest = [...next].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))[0];
-        if (newest?.status === 'novo') setToast(`Novo currículo recebido: ${newest.name}`);
-      }
-      if (event.key === AGENDA_KEY) setInterviewEvents(loadInterviewEvents());
-    };
-    window.addEventListener('storage', syncExternalChanges);
-    return () => window.removeEventListener('storage', syncExternalChanges);
+    let cancelled = false;
+    Promise.all([candidatesApi.list(), interviewsApi.list()])
+      .then(([candidatesRes, interviewsRes]) => {
+        if (cancelled) return;
+        setCandidates(candidatesRes.candidates);
+        setInterviewEvents(interviewsRes.interviews);
+      })
+      .catch(() => { if (!cancelled) setDataError('Não foi possível carregar os dados do painel. Recarregue a página.'); })
+      .finally(() => { if (!cancelled) setDataLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -100,12 +101,6 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
   };
 
   const markAllNotificationsRead = () => setReadNotificationIds(notifications.map(item => item.id));
-
-  const replaceCandidates = (next: Candidate[]) => {
-    saveCandidates(next);
-    setCandidates(next);
-    setSelected(current => current ? next.find(candidate => candidate.id === current.id) || current : null);
-  };
 
   const syncCandidateFromInterview = (event: InterviewEvent, sourceCandidates = candidates) => {
     if (!event.candidateId) return sourceCandidates;
@@ -125,50 +120,76 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
   };
 
   useEffect(() => {
-    let next = candidates;
+    const updates: { id: number; status: CandidateStatus }[] = [];
+    let simulated = candidates;
     interviewEvents.forEach(event => {
-      if (event.status === 'confirmada' || event.status === 'concluida') next = syncCandidateFromInterview(event, next);
+      if (event.status === 'confirmada' || event.status === 'concluida') {
+        const next = syncCandidateFromInterview(event, simulated);
+        if (next !== simulated) {
+          simulated = next;
+          const updated = next.find(item => item.id === event.candidateId);
+          if (updated) updates.push({ id: updated.id, status: updated.status });
+        }
+      }
     });
-    if (next !== candidates) replaceCandidates(next);
+    if (!updates.length) return;
+    setCandidates(simulated);
+    updates.forEach(update => { candidatesApi.update(update.id, { status: update.status }).catch(() => {}); });
     // Sincroniza confirmações antigas salvas no navegador com a nova etapa de decisão.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [interviewEvents]);
 
-  const persistInterview = (event: InterviewEvent, isNew = false) => {
-    const exists = interviewEvents.some(item => item.id === event.id);
-    const nextEvents = exists
-      ? interviewEvents.map(item => item.id === event.id ? event : item)
-      : [...interviewEvents, event];
-    saveInterviewEvents(nextEvents);
-    setInterviewEvents(nextEvents);
-
-    const nextCandidates = syncCandidateFromInterview(event, candidates);
-    if (nextCandidates !== candidates) replaceCandidates(nextCandidates);
-    if (isNew) setToast('Entrevista agendada com sucesso.');
+  const persistInterview = async (event: InterviewEvent, isNew = false) => {
+    try {
+      const { interview } = isNew ? await interviewsApi.create(event) : await interviewsApi.update(event.id, event);
+      setInterviewEvents(current => {
+        const exists = current.some(item => item.id === interview.id);
+        return exists ? current.map(item => item.id === interview.id ? interview : item) : [...current, interview];
+      });
+      const nextCandidates = syncCandidateFromInterview(interview, candidates);
+      if (nextCandidates !== candidates) {
+        setCandidates(nextCandidates);
+        const updated = nextCandidates.find(item => item.id === interview.candidateId);
+        if (updated) candidatesApi.update(updated.id, { status: updated.status }).catch(() => {});
+      }
+      if (isNew) setToast('Entrevista agendada com sucesso.');
+    } catch (err) {
+      setToast(err instanceof ApiError ? err.message : 'Não foi possível salvar a entrevista.');
+    }
   };
 
-  const handleStatus = (id: number, status: CandidateStatus) => {
-    const next = updateCandidateStatus(candidates, id, status);
-    setCandidates(next);
-    const updated = next.find(candidate => candidate.id === id) || null;
-    setSelected(updated);
-    setToast('Status do perfil atualizado.');
+  const handleStatus = async (id: number, status: CandidateStatus) => {
+    try {
+      const { candidate } = await candidatesApi.update(id, { status });
+      setCandidates(current => current.map(item => item.id === id ? candidate : item));
+      setSelected(current => current && current.id === id ? candidate : current);
+      setToast('Status do perfil atualizado.');
+    } catch (err) {
+      setToast(err instanceof ApiError ? err.message : 'Não foi possível atualizar o status.');
+    }
   };
 
-  const handleBoardMove = (candidate: Candidate, status: CandidateStatus) => {
+  const handleBoardMove = async (candidate: Candidate, status: CandidateStatus) => {
     if (candidate.status === status) return;
-    const next = updateCandidateStatus(candidates, candidate.id, status);
-    setCandidates(next);
-    setToast(`${candidate.name} movido para ${statusMap[status].label}.`);
+    try {
+      const { candidate: updated } = await candidatesApi.update(candidate.id, { status });
+      setCandidates(current => current.map(item => item.id === updated.id ? updated : item));
+      setToast(`${updated.name} movido para ${statusMap[status].label}.`);
+    } catch (err) {
+      setToast(err instanceof ApiError ? err.message : 'Não foi possível mover o candidato.');
+    }
   };
 
-  const handleCreate = (candidate: Candidate) => {
-    const next = [candidate, ...candidates];
-    saveCandidates(next);
-    setCandidates(next);
-    setNewOpen(false);
-    setActive('candidates');
-    setToast(`${candidate.profileType === 'medico' ? 'Médico' : 'Colaborador'} cadastrado com sucesso.`);
+  const handleCreate = async (input: NewCandidateInput) => {
+    try {
+      const { candidate } = await candidatesApi.create(input);
+      setCandidates(current => [candidate, ...current]);
+      setNewOpen(false);
+      setActive('candidates');
+      setToast(`${candidate.profileType === 'medico' ? 'Médico' : 'Colaborador'} cadastrado com sucesso.`);
+    } catch (err) {
+      setToast(err instanceof ApiError ? err.message : 'Não foi possível cadastrar o candidato.');
+    }
   };
 
   const handleSaveInterview = (event: InterviewEvent) => {
@@ -187,44 +208,28 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
     persistInterview(nextEvent, !existing);
   };
 
-  const handleDeleteInterview = (id: string) => {
-    const next = interviewEvents.filter(event => event.id !== id);
-    saveInterviewEvents(next);
-    setInterviewEvents(next);
-    setToast('Agendamento removido da agenda.');
+  const handleDeleteInterview = async (id: string) => {
+    try {
+      await interviewsApi.remove(id);
+      setInterviewEvents(current => current.filter(event => event.id !== id));
+      setToast('Agendamento removido da agenda.');
+    } catch (err) {
+      setToast(err instanceof ApiError ? err.message : 'Não foi possível remover o agendamento.');
+    }
   };
 
-  const handleInterviewStatus = (id: string, status: InterviewStatus) => {
-    const current = interviewEvents.find(event => event.id === id);
-    if (!current) return;
-    const now = new Date().toISOString();
-    const labels: Partial<Record<InterviewStatus, { action: InterviewLogEntry['action']; label: string }>> = {
-      confirmada: { action: 'confirmada', label: 'Entrevista confirmada' },
-      reagendada: { action: 'reagendada', label: 'Entrevista reagendada' },
-      em_andamento: { action: 'iniciada', label: 'Entrevista iniciada' },
-      concluida: { action: 'concluida', label: 'Entrevista concluída' },
-      cancelada: { action: 'cancelada', label: 'Entrevista cancelada' }
-    };
-    const meta = labels[status];
-    const nextEvent: InterviewEvent = {
-      ...current,
-      status,
-      updatedAt: now,
-      logs: meta ? [...(current.logs || []), { id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, at: now, action: meta.action, label: meta.label } as InterviewLogEntry] : current.logs
-    };
-    persistInterview(nextEvent);
-    setToast(status === 'confirmada' ? 'Entrevista confirmada e perfil enviado para Decisão de contratação.' : status === 'concluida' ? 'Entrevista concluída e removida do calendário.' : 'Status do agendamento atualizado.');
-  };
-
-  const handleSaveProfile = (next: UserProfile) => {
-    saveProfile(next);
-    setProfile(next);
-    setToast('Perfil atualizado com sucesso.');
+  const handleSaveProfile = async (next: UserProfile) => {
+    try {
+      const { profile: updated } = await authApi.updateProfile(next);
+      setProfile(updated);
+      setToast('Perfil atualizado com sucesso.');
+    } catch (err) {
+      setToast(err instanceof ApiError ? err.message : 'Não foi possível atualizar o perfil.');
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem(AUTH_KEY);
-    onLogout();
+    authApi.logout().finally(onLogout);
   };
 
   const renderModule = () => {
@@ -241,6 +246,19 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
       default: return <><StatCards candidates={candidates}/><CandidateTable candidates={candidates} onOpen={setSelected}/></>;
     }
   };
+
+  if (dataLoading || dataError) {
+    return (
+      <div className={`dashboard-shell theme-${theme}`}>
+        <div className="loading-screen">
+          <div className="loading-orbit">
+            <div className="loading-ring" />
+            <div className="loading-brand"><strong>J&amp;P</strong><span>{dataError || 'Carregando dados...'}</span></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`dashboard-shell theme-${theme} ${collapsed ? 'sidebar-collapsed' : ''}`}>
@@ -260,7 +278,7 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
         </main>
       </div>
 
-      <CandidateModal candidate={activeCandidate} interviewEvents={interviewEvents} onClose={() => setSelected(null)} onToast={setToast}/>
+      <CandidateModal candidate={activeCandidate} interviewEvents={interviewEvents} onClose={() => setSelected(null)}/>
       <NewCandidateModal open={newOpen} onClose={() => setNewOpen(false)} onCreate={handleCreate}/>
       {toast && <div className="toast-message">{toast}</div>}
     </div>

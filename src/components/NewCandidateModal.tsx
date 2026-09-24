@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { BriefcaseBusiness, Stethoscope } from 'lucide-react';
 import { Icons } from '../icons';
-import { initialsFromName, normalizeCandidate } from '../storage';
 import { statusMap } from '../data';
-import type { Candidate, CandidateStatus, CandidateType } from '../types';
+import type { CandidateStatus, CandidateType, NewCandidateInput } from '../types';
 import { formatPhoneBR } from '../phone';
 
-type Props = { open: boolean; onClose: () => void; onCreate: (candidate: Candidate) => void };
+type Props = { open: boolean; onClose: () => void; onCreate: (input: NewCandidateInput) => void };
 
 export default function NewCandidateModal({ open, onClose, onCreate }: Props) {
   const [status, setStatus] = useState<CandidateStatus>('novo');
@@ -17,28 +16,22 @@ export default function NewCandidateModal({ open, onClose, onCreate }: Props) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const name = String(form.get('name') || '').trim();
-    const area = String(form.get('specialty') || '').trim();
-    const candidate = normalizeCandidate({
-      id: Date.now(),
+    const input: NewCandidateInput = {
       profileType,
       name,
-      initials: initialsFromName(name),
-      specialty: area,
+      specialty: String(form.get('specialty') || '').trim(),
       city: String(form.get('city') || '').trim(),
       crm: profileType === 'medico' ? String(form.get('crm') || '').trim() : 'Não se aplica',
       rqe: profileType === 'medico' ? String(form.get('rqe') || '').trim() || 'Não informado' : 'Não se aplica',
       status,
-      statusLabel: statusMap[status].label,
       email: String(form.get('email') || '').trim(),
       phone: formatPhoneBR(String(form.get('phone') || '')),
       experience: String(form.get('experience') || '').trim() || 'Não informado',
       availability: String(form.get('availability') || '').trim(),
-      createdAt: new Date().toISOString(),
       notes: String(form.get('notes') || '').trim() || 'Candidato adicionado manualmente pelo painel.',
-      curriculum: [`${profileType === 'medico' ? 'Médico' : 'Colaborador'} cadastrado manualmente no painel administrativo.`],
-      documents: []
-    });
-    onCreate(candidate);
+      curriculum: [`${profileType === 'medico' ? 'Médico' : 'Colaborador'} cadastrado manualmente no painel administrativo.`]
+    };
+    onCreate(input);
     event.currentTarget.reset();
     setStatus('novo');
     setProfileType('medico');

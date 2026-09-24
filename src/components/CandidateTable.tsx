@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Icons } from '../icons';
-import { formatDate } from '../storage';
+import { formatDate } from '../format';
 import type { Candidate, CandidateStatus, CandidateType } from '../types';
 
 const statusClass: Record<CandidateStatus, string> = {
