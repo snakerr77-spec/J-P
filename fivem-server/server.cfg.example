@@ -1,0 +1,28 @@
+## Copie para server.cfg. Segredos ficam em secrets.cfg (fora do Git).
+exec secrets.cfg
+
+endpoint_add_tcp "0.0.0.0:30120"
+endpoint_add_udp "0.0.0.0:30120"
+
+sv_hostname "Minha Cidade | RP + PVP"
+sets sv_projectName "Minha Cidade"
+sets sv_projectDesc "RP e PVP no mesmo servidor"
+sets locale "pt-BR"
+sv_maxclients 48
+set onesync on
+
+# Recursos base (ajuste conforme o framework escolhido)
+ensure mapmanager
+ensure chat
+ensure spawnmanager
+ensure sessionmanager
+ensure hardcap
+
+# Nossos scripts (pastas entre [] são categorias e carregam tudo dentro)
+ensure [shared]
+ensure [rp]
+ensure [pvp]
+
+# Admins (troque pelo seu identifier)
+# add_ace group.admin command allow
+# add_principal identifier.fivem:SEU_ID group.admin

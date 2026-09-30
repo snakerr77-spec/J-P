@@ -1,0 +1,13 @@
+name: Lua check
+on:
+  pull_request:
+    paths: ['fivem-server/**']
+jobs:
+  luacheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sintaxe Lua
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lua5.4
+          find fivem-server -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p

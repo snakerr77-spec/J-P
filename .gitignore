@@ -27,3 +27,10 @@ pnpm-debug.log*
 # Temporários
 *.tmp
 *.swp
+
+# FiveM (segredos e arquivos gerados pelo servidor)
+fivem-server/secrets.cfg
+fivem-server/txData/
+fivem-server/cache/
+fivem-server/*.log
+fivem-server/resources/**/node_modules/
