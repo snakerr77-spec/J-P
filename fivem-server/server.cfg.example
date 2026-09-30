@@ -1,28 +1,42 @@
-## Copie para server.cfg. Segredos ficam em secrets.cfg (fora do Git).
-exec secrets.cfg
+## ============================================================
+##  PORTO ESMERALDA - RP + PVP
+##  Copie para server.cfg. Segredos ficam em secrets.cfg (fora do Git).
+## ============================================================
+exec secrets.cfg      # sv_licenseKey "SUA_KEY"
 
 endpoint_add_tcp "0.0.0.0:30120"
 endpoint_add_udp "0.0.0.0:30120"
 
-sv_hostname "Minha Cidade | RP + PVP"
-sets sv_projectName "Minha Cidade"
-sets sv_projectDesc "RP e PVP no mesmo servidor"
+sv_hostname "Porto Esmeralda | RP + PVP | Polícia, Favela, Blindados"
+sets sv_projectName "Porto Esmeralda"
+sets sv_projectDesc "Cidade de RP com PVP: polícia, favela, carro-forte, empregos, garagem e arena."
 sets locale "pt-BR"
+sets tags "roleplay, pvp, brasil, policia, favela"
 sv_maxclients 48
 set onesync on
 
-# Recursos base (ajuste conforme o framework escolhido)
+# ---- recursos base do FiveM ----
 ensure mapmanager
 ensure chat
 ensure spawnmanager
 ensure sessionmanager
 ensure hardcap
 
-# Nossos scripts (pastas entre [] são categorias e carregam tudo dentro)
-ensure [shared]
-ensure [rp]
-ensure [pvp]
+# ---- Porto Esmeralda (ORDEM IMPORTA) ----
+ensure pe_menu
+ensure pe_core
+ensure pe_admin
+ensure pe_bank
+ensure pe_shops
+ensure pe_police
+ensure pe_ems
+ensure pe_garage
+ensure pe_jobs
+ensure pe_favela
+ensure pe_pvp
 
-# Admins (troque pelo seu identifier)
-# add_ace group.admin command allow
-# add_principal identifier.fivem:SEU_ID group.admin
+# ---- administradores ----
+# Descubra seu identifier entrando no servidor e olhando o console, ou em https://forum.cfx.re
+add_ace group.admin command allow
+add_ace group.admin pe.admin allow
+# add_principal identifier.license:SEU_LICENSE_AQUI group.admin

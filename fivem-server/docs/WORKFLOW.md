@@ -17,7 +17,7 @@ Abra um **Pull Request** no GitHub → o outro revisa → **Merge** na `main`.
 Dica: proteja a `main` (Settings → Branches → Require pull request), assim ninguém quebra o servidor sem querer.
 
 ## 3. Evitar conflitos
-- Combinem quem mexe em qual resource (ex.: você = `[rp]`, amigo = `[pvp]`). Use *Issues* como lista de tarefas.
+- Combinem quem mexe em qual resource (ex.: você = `[rp]` e `[crime]`, amigo = `[pvp]` e `[core]`). Use *Issues* como lista de tarefas.
 - Arquivos compartilhados (`server.cfg.example`, configs globais): mudanças pequenas e commits frequentes.
 - `git pull` antes de começar e antes de abrir o PR.
 
@@ -28,7 +28,7 @@ Dica: proteja a `main` (Settings → Branches → Require pull request), assim n
 | Servidor de teste | testar junto | `git pull` + `restart resource` |
 | Produção | jogadores | só o que está na `main` |
 
-Dica: no VPS, `git pull` e depois `refresh` + `ensure jp_base` no console (sem reiniciar tudo).
+Dica: no VPS, `git pull` e depois `refresh` + `ensure pe_police` no console (sem reiniciar tudo).
 
 ## 5. Editar ao mesmo tempo, ao vivo (opcional)
 - **VS Code Live Share** — os dois editam o mesmo arquivo em tempo real (bom para programar em dupla).
@@ -41,3 +41,8 @@ Não versionem o banco. Versionem **arquivos `.sql`** em `resources/[rp]/<resour
 - Validar tudo no **server-side**: o client nunca decide dinheiro, itens, dano ou permissões.
 - Segredos só em `secrets.cfg` (fora do Git). Se vazar uma key, troque no Keymaster.
 - Sem caixa-preta: não instalem scripts "leaked/crackeados" (backdoors são comuns e podem derrubar/roubar o servidor). Usem fontes oficiais (Cfx.re forum, GitHub de QBCore/ox).
+
+## 8. Como criar um resource novo
+Copie a estrutura de `resources/[rp]/pe_bank` (fxmanifest + config + client + server). Para usar o núcleo
+da cidade, inclua `@pe_core/lib/client.lua` e `@pe_core/lib/server.lua` no manifest (ver `pe_core/lib`) e
+adicione `ensure nome` no `server.cfg.example` **depois** de `pe_core`.

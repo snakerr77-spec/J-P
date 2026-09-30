@@ -1,0 +1,5 @@
+secrets.cfg
+server.cfg
+txData/
+cache/
+*.log

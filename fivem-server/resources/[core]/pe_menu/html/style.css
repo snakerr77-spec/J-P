@@ -1,0 +1,19 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: transparent; overflow: hidden; }
+.hidden { display: none !important; }
+.panel { position: absolute; top: 12vh; left: 4vw; width: 380px; background: rgba(12, 20, 18, .92);
+  border: 1px solid #1f6f50; border-radius: 10px; color: #e9f5ef; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.panel.small { left: 50%; transform: translateX(-50%); top: 35vh; width: 340px; }
+.head { padding: 14px 16px; font-weight: 700; font-size: 16px; background: linear-gradient(90deg, #0f7a52, #12382b);
+  border-radius: 10px 10px 0 0; letter-spacing: .3px; }
+#list { max-height: 55vh; overflow-y: auto; }
+.item { display: flex; justify-content: space-between; gap: 10px; padding: 10px 16px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,.05); }
+.item .l { font-size: 14px; }
+.item .d { font-size: 11.5px; color: #8fb3a3; margin-top: 2px; }
+.item .r { color: #7be3a6; font-weight: 600; white-space: nowrap; }
+.item.sel { background: #14a06b; color: #fff; }
+.item.sel .d, .item.sel .r { color: #eafff4; }
+.foot { padding: 8px 16px; font-size: 11px; color: #7da18f; }
+input { width: calc(100% - 32px); margin: 14px 16px 4px; padding: 10px; border-radius: 6px; border: 1px solid #1f6f50;
+  background: #0a1210; color: #fff; font-size: 15px; outline: none; }
