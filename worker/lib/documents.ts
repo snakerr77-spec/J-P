@@ -31,8 +31,8 @@ export async function storeDocument(env: Env, candidateId: number, type: string,
   });
 
   await env.DB.prepare(
-    `INSERT INTO documents (id, candidate_id, type, label, name, mime, size, r2_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(id, candidateId, type, label, file.name, mime, file.size, r2Key).run();
+    `INSERT INTO documents (id, candidate_id, type, label, name, mime, size, r2_key, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(id, candidateId, type, label, file.name, mime, file.size, r2Key, new Date().toISOString()).run();
 
   return { id, type, label, name: file.name, mime, size: file.size };
 }

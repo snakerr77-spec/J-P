@@ -1,3 +1,8 @@
+-- Nenhuma coluna de data usa DEFAULT (datetime('now')): o formato do SQLite
+-- (sem "T"/"Z") não ordena corretamente contra os ISO 8601 que a aplicação já
+-- grava em outras colunas, então todo timestamp é sempre gerado em JS
+-- (new Date().toISOString()) e passado explicitamente.
+
 -- Usuários administrativos do painel (autenticação real, substitui o login fake do protótipo)
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -6,7 +11,7 @@ CREATE TABLE users (
   name TEXT NOT NULL DEFAULT 'Administrador',
   role TEXT NOT NULL DEFAULT 'Equipe de recrutamento',
   phone TEXT NOT NULL DEFAULT '',
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL
 );
 
 -- Candidatos (médicos e colaboradores)
@@ -43,7 +48,7 @@ CREATE TABLE documents (
   mime TEXT NOT NULL DEFAULT '',
   size INTEGER NOT NULL DEFAULT 0,
   r2_key TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL
 );
 
 CREATE INDEX idx_documents_candidate ON documents(candidate_id);

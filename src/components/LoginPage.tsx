@@ -4,15 +4,22 @@ import { authApi, ApiError } from '../api';
 import type { UserProfile } from '../types';
 
 type Props = { onAuthenticated: (profile: UserProfile) => void };
+type Stage = 'credentials' | 'mfa';
+
+const RESEND_COOLDOWN_SECONDS = 30;
 
 export default function LoginPage({ onAuthenticated }: Props) {
   const [checkingSetup, setCheckingSetup] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
+  const [stage, setStage] = useState<Stage>('credentials');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +30,12 @@ export default function LoginPage({ onAuthenticated }: Props) {
       .finally(() => setCheckingSetup(false));
   }, []);
 
-  const submit = async (event: React.FormEvent) => {
+  useEffect(() => {
+    const timer = window.setInterval(() => setResendCooldown(value => (value > 0 ? value - 1 : 0)), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const submitCredentials = async (event: React.FormEvent) => {
     event.preventDefault();
     if (loading) return;
     if (!email.trim() || !password.trim()) {
@@ -39,18 +51,54 @@ export default function LoginPage({ onAuthenticated }: Props) {
     setMessage('');
     setLoading(true);
     try {
-      if (needsSetup) {
-        const { profile } = await authApi.setup({ name: name.trim(), email: email.trim(), password });
-        onAuthenticated(profile);
-      } else {
-        await authApi.login(email.trim(), password);
-        const { profile } = await authApi.me();
-        onAuthenticated(profile);
-      }
+      const result = needsSetup
+        ? await authApi.setup({ name: name.trim(), email: email.trim(), password })
+        : await authApi.login(email.trim(), password);
+      setPendingEmail(result.email);
+      setCode('');
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      setStage('mfa');
     } catch (err) {
       setMessage(err instanceof ApiError ? err.message : 'Não foi possível entrar. Tente novamente.');
+    } finally {
       setLoading(false);
     }
+  };
+
+  const submitCode = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (loading) return;
+    if (!/^\d{6}$/.test(code)) {
+      setMessage('Informe o código de 6 dígitos enviado por e-mail.');
+      return;
+    }
+    setMessage('');
+    setLoading(true);
+    try {
+      const { profile } = await authApi.verifyMfa(code);
+      onAuthenticated(profile);
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : 'Não foi possível verificar o código.');
+      setLoading(false);
+    }
+  };
+
+  const resendCode = async () => {
+    if (resendCooldown > 0 || loading) return;
+    setMessage('');
+    try {
+      await authApi.resendMfa();
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : 'Não foi possível reenviar o código.');
+    }
+  };
+
+  const backToCredentials = () => {
+    setStage('credentials');
+    setCode('');
+    setMessage('');
+    setPassword('');
   };
 
   return (
@@ -79,62 +127,93 @@ export default function LoginPage({ onAuthenticated }: Props) {
       </section>
 
       <section className="login-form-side">
-        <form className="login-card" onSubmit={submit}>
-          <img className="login-mobile-logo" src="./assets/jp-logo-login.svg" alt="J&P Serviços Médicos" />
-          <span className="login-eyebrow">{needsSetup ? 'PRIMEIRO ACESSO' : 'ÁREA RESTRITA'}</span>
-          <h2>{needsSetup ? 'Criar conta de administrador' : 'Bem-vindo de volta'}</h2>
-          <p>{needsSetup ? 'Nenhum administrador foi configurado ainda. Crie o primeiro acesso ao painel.' : 'Entre com suas credenciais para acessar o painel.'}</p>
+        {stage === 'credentials' ? (
+          <form className="login-card" onSubmit={submitCredentials}>
+            <img className="login-mobile-logo" src="./assets/jp-logo-login.svg" alt="J&P Serviços Médicos" />
+            <span className="login-eyebrow">{needsSetup ? 'PRIMEIRO ACESSO' : 'ÁREA RESTRITA'}</span>
+            <h2>{needsSetup ? 'Criar conta de administrador' : 'Bem-vindo de volta'}</h2>
+            <p>{needsSetup ? 'Nenhum administrador foi configurado ainda. Crie o primeiro acesso ao painel.' : 'Entre com suas credenciais para acessar o painel.'}</p>
 
-          {needsSetup && (
+            {needsSetup && (
+              <label>
+                Nome do administrador
+                <div className="login-input">
+                  <Icons.Mail size={18} />
+                  <input type="text" value={name} onChange={event => setName(event.target.value)} placeholder="Seu nome" autoComplete="name" />
+                </div>
+              </label>
+            )}
+
             <label>
-              Nome do administrador
+              Endereço de e-mail
               <div className="login-input">
                 <Icons.Mail size={18} />
-                <input type="text" value={name} onChange={event => setName(event.target.value)} placeholder="Seu nome" autoComplete="name" />
+                <input type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Seu e-mail" autoComplete="username" />
               </div>
             </label>
-          )}
 
-          <label>
-            Endereço de e-mail
-            <div className="login-input">
-              <Icons.Mail size={18} />
-              <input type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Seu e-mail" autoComplete="username" />
-            </div>
-          </label>
-
-          <label>
-            Senha
-            <div className="login-input">
-              <span className="lock-symbol">⌑</span>
-              <input type={showPassword ? 'text' : 'password'} value={password} onChange={event => setPassword(event.target.value)} placeholder="Sua senha" autoComplete={needsSetup ? 'new-password' : 'current-password'} />
-              <button type="button" onClick={() => setShowPassword(value => !value)}>{showPassword ? 'Ocultar' : 'Mostrar'}</button>
-            </div>
-          </label>
-
-          {needsSetup && (
             <label>
-              Confirmar senha
+              Senha
               <div className="login-input">
                 <span className="lock-symbol">⌑</span>
-                <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} placeholder="Repita a senha" autoComplete="new-password" />
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={event => setPassword(event.target.value)} placeholder="Sua senha" autoComplete={needsSetup ? 'new-password' : 'current-password'} />
+                <button type="button" onClick={() => setShowPassword(value => !value)}>{showPassword ? 'Ocultar' : 'Mostrar'}</button>
               </div>
             </label>
-          )}
 
-          {!needsSetup && (
+            {needsSetup && (
+              <label>
+                Confirmar senha
+                <div className="login-input">
+                  <span className="lock-symbol">⌑</span>
+                  <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} placeholder="Repita a senha" autoComplete="new-password" />
+                </div>
+              </label>
+            )}
+
+            {message && <div className="login-message">{message}</div>}
+            <button className="login-submit" type="submit" disabled={loading || checkingSetup}>
+              {loading ? 'Validando acesso...' : needsSetup ? 'Criar conta e continuar' : 'Continuar'}
+            </button>
+            <div className="security-line"><Icons.ShieldCheck size={17} />Login em duas etapas por e-mail</div>
+          </form>
+        ) : (
+          <form className="login-card" onSubmit={submitCode}>
+            <img className="login-mobile-logo" src="./assets/jp-logo-login.svg" alt="J&P Serviços Médicos" />
+            <span className="login-eyebrow">VERIFICAÇÃO EM DUAS ETAPAS</span>
+            <h2>Confirme seu acesso</h2>
+            <p>Enviamos um código de 6 dígitos para <strong>{pendingEmail}</strong>. Ele expira em 10 minutos.</p>
+
+            <label>
+              Código de verificação
+              <div className="login-input">
+                <span className="lock-symbol">⌑</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={code}
+                  onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                />
+              </div>
+            </label>
+
             <div className="login-meta">
-              <label><input type="checkbox" defaultChecked /> <span>Manter conectado</span></label>
-              <button type="button">Esqueci minha senha</button>
+              <button type="button" onClick={backToCredentials}>Usar outro e-mail</button>
+              <button type="button" onClick={resendCode} disabled={resendCooldown > 0}>
+                {resendCooldown > 0 ? `Reenviar em ${resendCooldown}s` : 'Reenviar código'}
+              </button>
             </div>
-          )}
 
-          {message && <div className="login-message">{message}</div>}
-          <button className="login-submit" type="submit" disabled={loading || checkingSetup}>
-            {loading ? 'Validando acesso...' : needsSetup ? 'Criar conta e entrar' : 'Entrar'}
-          </button>
-          <div className="security-line"><Icons.ShieldCheck size={17} />Ambiente seguro</div>
-        </form>
+            {message && <div className="login-message">{message}</div>}
+            <button className="login-submit" type="submit" disabled={loading}>
+              {loading ? 'Verificando...' : 'Verificar e entrar'}
+            </button>
+            <div className="security-line"><Icons.ShieldCheck size={17} />Ambiente seguro</div>
+          </form>
+        )}
       </section>
 
       {loading && (

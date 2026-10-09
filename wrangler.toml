@@ -3,12 +3,15 @@ main = "worker/index.ts"
 compatibility_date = "2026-09-24"
 
 # Frontend (build gerado pelo Vite) servido como assets estáticos.
-# O Worker só é acionado para as rotas /api/*; todo o resto (inclusive
-# o fallback de SPA) é resolvido diretamente pelos assets.
+# O Worker roda em toda rota (run_worker_first = true) para poder aplicar os
+# mesmos cabeçalhos de segurança (CSP, HSTS, etc.) no HTML/JS/CSS estático,
+# não só nas respostas JSON da API; para rotas fora de /api/*, o Worker só
+# repassa a requisição para o binding ASSETS (veja worker/index.ts).
 [assets]
 directory = "./dist"
+binding = "ASSETS"
 not_found_handling = "single-page-application"
-run_worker_first = ["/api/*"]
+run_worker_first = true
 
 # Banco D1 — dados de candidatos, entrevistas e metadados de documentos.
 # Crie com `wrangler d1 create jp-recrutamento-db` e substitua o database_id abaixo
@@ -24,6 +27,12 @@ database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 binding = "DOCUMENTS_BUCKET"
 bucket_name = "jp-recrutamento-documentos"
 
-# AUTH_SECRET é um segredo (chave usada para assinar o cookie de sessão), não uma var.
-# Local: copie .dev.vars.example para .dev.vars e defina um valor.
-# Produção: `wrangler secret put AUTH_SECRET`.
+# Remetente do e-mail de verificação (MFA). Troque pelo endereço que você verificar
+# no Resend (veja README.md); até lá, o padrão abaixo só funciona em modo de teste.
+[vars]
+MFA_FROM_EMAIL = "J&P Recrutamento <onboarding@resend.dev>"
+
+# AUTH_SECRET, RESEND_API_KEY etc. são segredos, não vars (não ficam em texto
+# plano aqui no wrangler.toml):
+# Local: copie .dev.vars.example para .dev.vars e defina os valores.
+# Produção: `wrangler secret put AUTH_SECRET` e `wrangler secret put RESEND_API_KEY`.

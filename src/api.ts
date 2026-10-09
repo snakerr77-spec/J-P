@@ -28,11 +28,15 @@ const apiPut = <T>(path: string, body: unknown) => request<T>(path, { method: 'P
 const apiPatch = <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
 const apiDelete = <T>(path: string) => request<T>(path, { method: 'DELETE' });
 
+export type MfaChallenge = { mfaRequired: true; email: string };
+
 export const authApi = {
   status: () => apiGet<{ hasAdmin: boolean }>('/api/auth/status'),
   setup: (payload: { name: string; email: string; password: string }) =>
-    apiPost<{ profile: UserProfile }>('/api/auth/setup', payload),
-  login: (email: string, password: string) => apiPost<{ ok: true }>('/api/auth/login', { email, password }),
+    apiPost<MfaChallenge>('/api/auth/setup', payload),
+  login: (email: string, password: string) => apiPost<MfaChallenge>('/api/auth/login', { email, password }),
+  verifyMfa: (code: string) => apiPost<{ profile: UserProfile }>('/api/auth/verify-mfa', { code }),
+  resendMfa: () => apiPost<{ ok: true }>('/api/auth/resend-mfa'),
   logout: () => apiPost<{ ok: true }>('/api/auth/logout'),
   me: () => apiGet<{ profile: UserProfile }>('/api/auth/me'),
   updateProfile: (profile: UserProfile) => apiPut<{ profile: UserProfile }>('/api/auth/me', profile)

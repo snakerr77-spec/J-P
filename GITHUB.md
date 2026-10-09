@@ -11,6 +11,7 @@ O repositório publica automaticamente no Cloudflare Workers a cada push na bran
    npx wrangler d1 create jp-recrutamento-db
    npx wrangler r2 bucket create jp-recrutamento-documentos
    npx wrangler secret put AUTH_SECRET
+   npx wrangler secret put RESEND_API_KEY
    ```
 2. Copie o `database_id` retornado por `d1 create` para `wrangler.toml`.
 3. No repositório do GitHub, acesse **Settings → Secrets and variables → Actions**
