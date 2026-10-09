@@ -1,6 +1,6 @@
 import type { Env } from '../env';
 
-const WINDOW_MINUTES = 15;
+const WINDOW_MINUTES = 10;
 const MAX_FAILED_ATTEMPTS = 5;
 
 export async function isRateLimited(env: Env, identifier: string): Promise<boolean> {

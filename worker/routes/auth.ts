@@ -82,7 +82,7 @@ auth.post('/login', async c => {
   if (!email || !password) return c.json({ error: 'Informe e-mail e senha.' }, 400);
 
   if (await isRateLimited(c.env, email)) {
-    return c.json({ error: 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.' }, 429);
+    return c.json({ error: 'Muitas tentativas de login incorretas. Aguarde 10 minutos e tente novamente.' }, 429);
   }
 
   const user = await c.env.DB.prepare(

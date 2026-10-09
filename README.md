@@ -170,8 +170,8 @@ do logout.
 
 ### Outras proteções já implementadas
 
-- **Força bruta**: 5 tentativas de login erradas para o mesmo e-mail em 15
-  minutos bloqueiam novas tentativas (mesmo com a senha certa) por um tempo.
+- **Força bruta**: 5 tentativas de login erradas para o mesmo e-mail em 10
+  minutos bloqueiam novas tentativas (mesmo com a senha certa) por esse tempo.
 - **Senhas**: hash com PBKDF2 (100.000 iterações) + salt aleatório por usuário;
   nunca gravadas nem logadas em texto puro.
 - **Cookies**: `HttpOnly`, `Secure` (em HTTPS) e `SameSite=Lax` — não acessíveis
