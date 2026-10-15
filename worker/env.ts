@@ -1,6 +1,6 @@
 export interface Env {
   DB: D1Database;
-  DOCUMENTS_BUCKET: R2Bucket;
+  DOCUMENTS: R2Bucket;
   ASSETS: Fetcher;
   AUTH_SECRET: string;
   RESEND_API_KEY: string;

@@ -14,7 +14,7 @@ documents.get('/:id', async c => {
   }>();
   if (!row) return c.json({ error: 'Documento não encontrado.' }, 404);
 
-  const object = await c.env.DOCUMENTS_BUCKET.get(row.r2_key);
+  const object = await c.env.DOCUMENTS.get(row.r2_key);
   if (!object) return c.json({ error: 'Arquivo não encontrado no armazenamento.' }, 404);
 
   const headers = new Headers();

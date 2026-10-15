@@ -26,7 +26,7 @@ export async function storeDocument(env: Env, candidateId: number, type: string,
   const mime = file.type || 'application/octet-stream';
   const r2Key = `candidates/${candidateId}/${id}-${sanitizeFilename(file.name)}`;
 
-  await env.DOCUMENTS_BUCKET.put(r2Key, file.stream(), {
+  await env.DOCUMENTS.put(r2Key, file.stream(), {
     httpMetadata: { contentType: mime }
   });
 

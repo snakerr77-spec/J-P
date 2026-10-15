@@ -13,19 +13,19 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = true
 
-# Banco D1 — dados de candidatos, entrevistas e metadados de documentos.
-# Crie com `wrangler d1 create jp-recrutamento-db` e substitua o database_id abaixo
-# pelo id retornado (veja README.md).
+# Banco D1 — aponta para o banco "j-p" que já existe no projeto Cloudflare
+# jp-credenciamento (mesmo id visto no painel), para reaproveitar os
+# candidatos já cadastrados em vez de criar um banco novo vazio.
 [[d1_databases]]
 binding = "DB"
-database_name = "jp-recrutamento-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_name = "j-p"
+database_id = "ce55632e-9137-4a0c-a8ef-aa87256e3acc"
 
-# Bucket R2 — armazena os PDFs/imagens enviados pelos candidatos.
-# Crie com `wrangler r2 bucket create jp-recrutamento-documentos` (veja README.md).
+# Bucket R2 — mesmo bucket já usado pelo projeto jp-credenciamento, para
+# reaproveitar os documentos já enviados pelos candidatos.
 [[r2_buckets]]
-binding = "DOCUMENTS_BUCKET"
-bucket_name = "jp-recrutamento-documentos"
+binding = "DOCUMENTS"
+bucket_name = "jp-credenciamento-documentos"
 
 # MFA_ENABLED = "false": login/setup criam a sessão direto após a senha, sem
 # exigir o código por e-mail. Pra religar o MFA (recomendado), troque para
