@@ -54,6 +54,10 @@ export default function LoginPage({ onAuthenticated }: Props) {
       const result = needsSetup
         ? await authApi.setup({ name: name.trim(), email: email.trim(), password })
         : await authApi.login(email.trim(), password);
+      if ('profile' in result) {
+        onAuthenticated(result.profile);
+        return;
+      }
       setPendingEmail(result.email);
       setCode('');
       setResendCooldown(RESEND_COOLDOWN_SECONDS);

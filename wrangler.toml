@@ -27,9 +27,14 @@ database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 binding = "DOCUMENTS_BUCKET"
 bucket_name = "jp-recrutamento-documentos"
 
-# Remetente do e-mail de verificação (MFA). Troque pelo endereço que você verificar
-# no Resend (veja README.md); até lá, o padrão abaixo só funciona em modo de teste.
+# MFA_ENABLED = "false": login/setup criam a sessão direto após a senha, sem
+# exigir o código por e-mail. Pra religar o MFA (recomendado), troque para
+# "true" — precisa ter RESEND_API_KEY configurada (wrangler secret put).
+# MFA_FROM_EMAIL: remetente do e-mail de verificação quando o MFA estiver
+# ligado. Troque pelo endereço que você verificar no Resend (veja README.md);
+# até lá, o padrão abaixo só funciona em modo de teste.
 [vars]
+MFA_ENABLED = "false"
 MFA_FROM_EMAIL = "J&P Recrutamento <onboarding@resend.dev>"
 
 # AUTH_SECRET, RESEND_API_KEY etc. são segredos, não vars (não ficam em texto

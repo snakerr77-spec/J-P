@@ -5,4 +5,5 @@ export interface Env {
   AUTH_SECRET: string;
   RESEND_API_KEY: string;
   MFA_FROM_EMAIL?: string;
+  MFA_ENABLED?: string;
 }

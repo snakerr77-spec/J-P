@@ -29,12 +29,13 @@ const apiPatch = <T>(path: string, body: unknown) => request<T>(path, { method: 
 const apiDelete = <T>(path: string) => request<T>(path, { method: 'DELETE' });
 
 export type MfaChallenge = { mfaRequired: true; email: string };
+export type LoginResult = MfaChallenge | { profile: UserProfile };
 
 export const authApi = {
   status: () => apiGet<{ hasAdmin: boolean }>('/api/auth/status'),
   setup: (payload: { name: string; email: string; password: string }) =>
-    apiPost<MfaChallenge>('/api/auth/setup', payload),
-  login: (email: string, password: string) => apiPost<MfaChallenge>('/api/auth/login', { email, password }),
+    apiPost<LoginResult>('/api/auth/setup', payload),
+  login: (email: string, password: string) => apiPost<LoginResult>('/api/auth/login', { email, password }),
   verifyMfa: (code: string) => apiPost<{ profile: UserProfile }>('/api/auth/verify-mfa', { code }),
   resendMfa: () => apiPost<{ ok: true }>('/api/auth/resend-mfa'),
   logout: () => apiPost<{ ok: true }>('/api/auth/logout'),

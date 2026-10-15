@@ -156,6 +156,11 @@ configuração antes para evitar conflito.
 
 ### Login em duas etapas (MFA por e-mail)
 
+> **Está desligado por padrão agora** (`MFA_ENABLED = "false"` em `wrangler.toml`).
+> Login e setup criam a sessão direto após a senha, sem exigir código por e-mail.
+> Para religar: troque para `"true"` (precisa de `RESEND_API_KEY` configurada) e
+> publique de novo. O resto desta seção descreve o comportamento com MFA ligado.
+
 Depois de validar e-mail e senha, o painel **não libera acesso direto**: gera um
 código de 6 dígitos, guarda só o hash dele no D1 (nunca o valor em texto puro) e
 envia por e-mail via Resend. Regras:

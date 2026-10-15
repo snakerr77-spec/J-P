@@ -22,6 +22,22 @@ const OTP_TTL_MINUTES = 10;
 const OTP_MAX_ATTEMPTS = 5;
 const OTP_RESEND_COOLDOWN_SECONDS = 30;
 
+type Profile = { name: string; role: string; email: string; phone: string };
+
+// Desligado por pedido do cliente (MFA_ENABLED não setada ou != "true").
+// Pra religar: wrangler secret/var MFA_ENABLED=true (precisa de RESEND_API_KEY
+// configurada). Com desligado, login/setup criam a sessão direto, sem e-mail.
+function isMfaEnabled(c: Context<AppEnv>): boolean {
+  return c.env.MFA_ENABLED === 'true';
+}
+
+async function loadProfile(c: Context<AppEnv>, userId: number): Promise<Profile | null> {
+  const user = await c.env.DB.prepare(
+    'SELECT name, role, email, phone FROM users WHERE id = ?'
+  ).bind(userId).first<Profile>();
+  return user ?? null;
+}
+
 async function issueMfaChallenge(c: Context<AppEnv>, userId: number, email: string): Promise<void> {
   const code = generateOtpCode();
   // Envia primeiro: se falhar, nada é gravado e o cliente pode tentar de novo
@@ -63,6 +79,12 @@ auth.post('/setup', async c => {
   ).bind(email, passwordHash, name, new Date().toISOString()).run();
 
   const userId = result.meta.last_row_id as number;
+
+  if (!isMfaEnabled(c)) {
+    await createSession(c, userId);
+    return c.json({ profile: await loadProfile(c, userId) }, 201);
+  }
+
   try {
     await issueMfaChallenge(c, userId, email);
   } catch (err) {
@@ -94,6 +116,11 @@ auth.post('/login', async c => {
 
   if (!user || !valid) {
     return c.json({ error: 'E-mail ou senha inválidos.' }, 401);
+  }
+
+  if (!isMfaEnabled(c)) {
+    await createSession(c, user.id);
+    return c.json({ profile: await loadProfile(c, user.id) });
   }
 
   await issueMfaChallenge(c, user.id, email);
@@ -137,11 +164,9 @@ auth.post('/verify-mfa', async c => {
   clearPendingMfaCookie(c);
   await createSession(c, userId);
 
-  const user = await c.env.DB.prepare(
-    'SELECT name, role, email, phone FROM users WHERE id = ?'
-  ).bind(userId).first<{ name: string; role: string; email: string; phone: string }>();
-  if (!user) return c.json({ error: 'Usuário não encontrado.' }, 404);
-  return c.json({ profile: user });
+  const profile = await loadProfile(c, userId);
+  if (!profile) return c.json({ error: 'Usuário não encontrado.' }, 404);
+  return c.json({ profile });
 });
 
 auth.post('/resend-mfa', async c => {
@@ -173,11 +198,9 @@ auth.post('/logout', async c => {
 });
 
 auth.get('/me', requireAuth, async c => {
-  const user = await c.env.DB.prepare(
-    'SELECT name, role, email, phone FROM users WHERE id = ?'
-  ).bind(c.get('userId')).first<{ name: string; role: string; email: string; phone: string }>();
-  if (!user) return c.json({ error: 'Usuário não encontrado.' }, 404);
-  return c.json({ profile: user });
+  const profile = await loadProfile(c, c.get('userId'));
+  if (!profile) return c.json({ error: 'Usuário não encontrado.' }, 404);
+  return c.json({ profile });
 });
 
 auth.put('/me', requireAuth, async c => {
