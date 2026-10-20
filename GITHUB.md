@@ -5,20 +5,20 @@ O repositório publica automaticamente no Cloudflare Workers a cada push na bran
 
 ## Configuração inicial
 
-1. Crie os recursos na Cloudflare (uma vez só, veja detalhes no `README.md`):
+1. O `wrangler.toml` já aponta para o banco D1 `j-p` e o bucket R2
+   `jp-credenciamento-documentos` já existentes (projeto `jp-credenciamento`),
+   então não é preciso criar nada — só autenticar e configurar os segredos
+   (veja detalhes no `README.md`):
    ```bash
    npx wrangler login
-   npx wrangler d1 create jp-recrutamento-db
-   npx wrangler r2 bucket create jp-recrutamento-documentos
    npx wrangler secret put AUTH_SECRET
    npx wrangler secret put RESEND_API_KEY
    ```
-2. Copie o `database_id` retornado por `d1 create` para `wrangler.toml`.
-3. No repositório do GitHub, acesse **Settings → Secrets and variables → Actions**
+2. No repositório do GitHub, acesse **Settings → Secrets and variables → Actions**
    e cadastre:
    - `CLOUDFLARE_API_TOKEN`
    - `CLOUDFLARE_ACCOUNT_ID`
-4. Faça commit e push das alterações (incluindo o `database_id` em `wrangler.toml`):
+3. Faça commit e push das alterações:
    ```bash
    git add .
    git commit -m "Configurar deploy Cloudflare"

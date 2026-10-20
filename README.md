@@ -46,16 +46,20 @@ como assets estáticos — um único deploy publica o site inteiro.
 npm install
 ```
 
-### 2. Criar os recursos no Cloudflare (uma vez só)
+### 2. Conectar aos recursos no Cloudflare
+
+O `wrangler.toml` já aponta para o banco D1 `j-p` e o bucket R2
+`jp-credenciamento-documentos` que o projeto `jp-credenciamento` já usa em
+produção (mesmos `database_id`/nomes vistos no painel da Cloudflare). Não é
+preciso criar nada novo — só autenticar:
 
 ```bash
 npx wrangler login
-npx wrangler d1 create jp-recrutamento-db
-npx wrangler r2 bucket create jp-recrutamento-documentos
 ```
 
-O comando `d1 create` imprime um `database_id`. Copie esse valor para o campo
-`database_id` em `wrangler.toml` (substituindo `REPLACE_WITH_YOUR_D1_DATABASE_ID`).
+Se algum dia for necessário apontar para um banco/bucket diferente (por
+exemplo, um ambiente de testes à parte), crie com `wrangler d1 create` /
+`wrangler r2 bucket create` e troque os valores em `wrangler.toml`.
 
 ### 3. Criar uma conta no Resend (envio do código de verificação)
 
@@ -102,8 +106,12 @@ O Vite encaminha automaticamente as chamadas `/api/*` para o Worker local
 
 No primeiro acesso, a tela de login detecta que ainda não existe administrador
 cadastrado e exibe um formulário para criar a primeira conta (nome, e-mail e
-senha). Depois de enviar, chega um código de 6 dígitos no e-mail informado —
-sem confirmar esse código, a conta não é liberada.
+senha). Com `MFA_ENABLED = "false"` (padrão atual), a sessão já começa direto
+depois de enviar o formulário; com o MFA ligado, chega um código de 6 dígitos
+no e-mail informado antes de liberar o acesso.
+
+Depois de entrar, em **Configurações → Equipe** dá para adicionar outras
+pessoas com o próprio e-mail e senha, sem precisar reaplicar o setup.
 
 ## Gerar build
 

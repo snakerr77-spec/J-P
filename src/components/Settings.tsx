@@ -4,6 +4,7 @@ import type { CandidateType, UserProfile } from '../types';
 import { formatPhoneBR } from '../phone';
 import type { ThemeMode } from './Sidebar';
 import ApplicationLinks from './ApplicationLinks';
+import TeamSettings from './TeamSettings';
 
 export default function Settings({ profile, theme, onThemeChange, onSave, onLogout, onPublicApplication }: {
   profile: UserProfile;
@@ -38,6 +39,8 @@ export default function Settings({ profile, theme, onThemeChange, onSave, onLogo
           </form>
         </article>
       </div>
+
+      <TeamSettings/>
 
       <ApplicationLinks onOpen={onPublicApplication} compact/>
 

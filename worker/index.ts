@@ -7,6 +7,7 @@ import candidates from './routes/candidates';
 import documents from './routes/documents';
 import interviews from './routes/interviews';
 import publicRoutes from './routes/public';
+import staff from './routes/staff';
 
 const app = new Hono<AppEnv>();
 
@@ -43,6 +44,7 @@ app.route('/api/candidates', candidates);
 app.route('/api/documents', documents);
 app.route('/api/interviews', interviews);
 app.route('/api/public', publicRoutes);
+app.route('/api/staff', staff);
 
 // Qualquer rota fora de /api/* é um asset estático (HTML/JS/CSS/imagens);
 // run_worker_first = true faz todo pedido passar por aqui primeiro, então

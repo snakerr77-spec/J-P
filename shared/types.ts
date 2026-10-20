@@ -55,6 +55,25 @@ export type UserProfile = {
   phone: string;
 };
 
+export type StaffMember = {
+  id: number;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+};
+
+export type NewStaffInput = {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  phone: string;
+};
+
+export type UpdateStaffInput = Partial<Omit<NewStaffInput, 'password'>> & { password?: string };
+
 export type InterviewAudience = CandidateType;
 export type InterviewStatus = 'agendada' | 'confirmada' | 'reagendada' | 'em_andamento' | 'concluida' | 'cancelada';
 

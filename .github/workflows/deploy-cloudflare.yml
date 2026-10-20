@@ -44,7 +44,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 migrations apply jp-recrutamento-db --remote
+          command: d1 migrations apply j-p --remote
 
       - name: Publicar Worker (frontend + API)
         uses: cloudflare/wrangler-action@v4
