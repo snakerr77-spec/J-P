@@ -1,0 +1,142 @@
+/*
+ * Base Tailwind v4 + tokens shadcn/ui (compatível com os componentes do 21st.dev).
+ *
+ * Paleta "Goute" (provisória até a identidade oficial da clínica ser definida):
+ *   brand  = verde-floresta (cor principal)      leaf  = verde-folha (estados/seleção)
+ *   coral  = destaque quente (valores, avisos)   fundo = creme
+ * Sem "preflight" global; o reset equivalente é aplicado só dentro de `.clinic-theme`.
+ */
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-coral: var(--coral);
+  --color-coral-soft: var(--coral-soft);
+  --color-coral-foreground: var(--coral-foreground);
+
+  --color-brand-50: #eef6f2;
+  --color-brand-100: #d6e9df;
+  --color-brand-200: #aed3c1;
+  --color-brand-700: #176248;
+  --color-brand-800: #0f4c3a;
+  --color-brand-900: #0a3a2c;
+  --color-brand-950: #062a1f;
+  --color-leaf-50: #e6f4ec;
+  --color-leaf-100: #c8e8d6;
+  --color-leaf-300: #86cba5;
+  --color-leaf-500: #2fa56f;
+  --color-leaf-600: #1b8559;
+  --color-leaf-700: #146d49;
+  --color-leaf-800: #0e5538;
+  --color-coral-300: #f3b19c;
+  --color-coral-500: #e8734f;
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
+}
+
+.clinic-theme {
+  --background: #faf7f2;
+  --foreground: #1d2b26;
+  --card: #ffffff;
+  --card-foreground: #1d2b26;
+  --popover: #ffffff;
+  --popover-foreground: #1d2b26;
+  --primary: #0f4c3a;
+  --primary-foreground: #ffffff;
+  --secondary: #e4f0ea;
+  --secondary-foreground: #0f4c3a;
+  --muted: #f1ede5;
+  --muted-foreground: #566660;
+  --accent: #e6f4ec;
+  --accent-foreground: #0e5538;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --border: #e2ddd2;
+  --input: #82918a;
+  --ring: #1b8559;
+  --success: #0f6b50;
+  --success-soft: #e3f5ee;
+  --coral: #e8734f;
+  --coral-soft: #fcebe4;
+  --coral-foreground: #8a2f14;
+  --radius: 0.875rem;
+
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reset escopado (equivalente ao preflight do Tailwind, só para o módulo público) */
+@layer base {
+  html, body, #root { margin: 0; min-height: 100%; }
+  body { background: #faf7f2; }
+  .clinic-theme,
+  .clinic-theme *,
+  .clinic-theme *::before,
+  .clinic-theme *::after {
+    box-sizing: border-box;
+    border-color: var(--border);
+  }
+  .clinic-theme :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, ul, ol) { margin: 0; }
+  .clinic-theme :where(h1, h2, h3, h4, h5, h6) { font-size: inherit; font-weight: inherit; }
+  .clinic-theme :where(ul, ol) { list-style: none; padding: 0; }
+  .clinic-theme :where(img, svg, video) { display: block; max-width: 100%; }
+  .clinic-theme :where(a) { color: inherit; text-decoration: inherit; }
+  .clinic-theme :where(button, input, select, textarea) {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    margin: 0;
+  }
+  .clinic-theme :where(button) { background: transparent; padding: 0; cursor: pointer; border: 0; }
+  .clinic-theme :where(button:disabled) { cursor: not-allowed; }
+  .clinic-theme :where(fieldset) { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .clinic-theme :where(legend) { padding: 0; }
+  .clinic-theme :where(table) { border-collapse: collapse; }
+  .clinic-theme :where(textarea) { resize: vertical; }
+  .clinic-theme ::placeholder { color: var(--muted-foreground); opacity: .75; }
+  .clinic-theme :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clinic-theme *, .clinic-theme *::before, .clinic-theme *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}
