@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, CalendarCheck2, CalendarClock, CheckCheck, ClipboardList, FileText, Mail, TriangleAlert } from 'lucide-react';
+import { Bell, CalendarClock, CheckCheck, ClipboardList, FileText, Mail, TriangleAlert } from 'lucide-react';
 import { Icons } from '../icons';
 import type { AppNotification } from '../notifications';
 
@@ -16,7 +16,6 @@ const kindIcon = (kind: AppNotification['kind']) => {
   if (kind === 'curriculo') return <FileText size={16}/>;
   if (kind === 'agenda') return <CalendarClock size={16}/>;
   if (kind === 'atraso') return <TriangleAlert size={16}/>;
-  if (kind === 'consulta') return <CalendarCheck2 size={16}/>;
   return <ClipboardList size={16}/>;
 };
 

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import {
   BadgeCheck,
   BarChart3,
-  CalendarCheck2,
   CalendarDays,
   ClipboardCheck,
   FileSearch2,
@@ -20,7 +19,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { UserProfile } from '../types';
 
-export type ModuleKey = 'candidates' | 'applications' | 'reviews' | 'waiting' | 'approved' | 'processes' | 'interviews' | 'agenda' | 'consultas' | 'reports' | 'settings';
+export type ModuleKey = 'candidates' | 'applications' | 'reviews' | 'waiting' | 'approved' | 'processes' | 'interviews' | 'agenda' | 'reports' | 'settings';
 export type ThemeMode = 'light' | 'dark';
 
 type Props = {
@@ -46,10 +45,6 @@ const recruitmentItems: NavItem[] = [
   { key: 'agenda', label: 'Agenda de entrevistas', short: 'Agenda', icon: CalendarDays }
 ];
 
-const clinicItems: NavItem[] = [
-  { key: 'consultas', label: 'Consultas', short: 'Consultas', icon: CalendarCheck2 }
-];
-
 const managementItems: NavItem[] = [
   { key: 'reports', label: 'Relatórios', short: 'Relatórios', icon: BarChart3 }
 ];
@@ -65,7 +60,6 @@ export default function Sidebar({ collapsed, active, profile, theme, onSelect, o
   };
 
   const filteredRecruitment = useMemo(() => filterItems(recruitmentItems), [query]);
-  const filteredClinic = useMemo(() => filterItems(clinicItems), [query]);
   const filteredManagement = useMemo(() => filterItems(managementItems), [query]);
 
   const renderItem = (item: NavItem) => {
@@ -106,10 +100,6 @@ export default function Sidebar({ collapsed, active, profile, theme, onSelect, o
         <div className="sidebar-group">
           <span className="sidebar-group-label">RECRUTAMENTO</span>
           {filteredRecruitment.map(renderItem)}
-        </div>
-        <div className="sidebar-group">
-          <span className="sidebar-group-label">CLÍNICA</span>
-          {filteredClinic.map(renderItem)}
         </div>
         <div className="sidebar-group">
           <span className="sidebar-group-label">GESTÃO</span>

@@ -1,8 +1,7 @@
 import type { Candidate, InterviewEvent } from './types';
-import type { Appointment } from './booking/types';
 import type { ModuleKey } from './components/Sidebar';
 
-export type NotificationKind = 'curriculo' | 'agenda' | 'atraso' | 'decisao' | 'consulta';
+export type NotificationKind = 'curriculo' | 'agenda' | 'atraso' | 'decisao';
 
 export type AppNotification = {
   id: string;
@@ -20,23 +19,8 @@ const formatDayTime = (value: Date) => new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
 }).format(value);
 
-export function buildNotifications(candidates: Candidate[], events: InterviewEvent[], now = new Date(), appointments: Appointment[] = []): AppNotification[] {
+export function buildNotifications(candidates: Candidate[], events: InterviewEvent[], now = new Date()): AppNotification[] {
   const notifications: AppNotification[] = [];
-
-  appointments
-    .filter(appointment => appointment.status === 'agendada' && new Date(`${appointment.date}T${appointment.time}:00`).getTime() >= now.getTime())
-    .forEach(appointment => {
-      notifications.push({
-        id: `consulta-${appointment.id}`,
-        kind: 'consulta',
-        title: 'Consulta aguardando confirmação',
-        description: appointment.patient.name,
-        meta: `${formatDayTime(new Date(`${appointment.date}T${appointment.time}:00`))} • ${appointment.professionalName}`,
-        module: 'consultas',
-        createdAt: appointment.createdAt,
-        priority: 2
-      });
-    });
 
   candidates
     .filter(candidate => candidate.status === 'novo')
