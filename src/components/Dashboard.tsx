@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Sidebar, { type ModuleKey, type ThemeMode } from './Sidebar';
 import Topbar from './Topbar';
-import Hero from './Hero';
+import Hero, { type HeroAside } from './Hero';
 import StatCards from './StatCards';
 import CandidateTable from './CandidateTable';
 import CandidateModal from './CandidateModal';
@@ -13,10 +13,15 @@ import Interviews from './Interviews';
 import Settings from './Settings';
 import HiringDecision from './HiringDecision';
 import ApplicationLinks from './ApplicationLinks';
+import ConsultasAdmin from './ConsultasAdmin';
 import { AUTH_KEY, SIDEBAR_KEY, THEME_KEY, STORAGE_KEY, AGENDA_KEY, statusMap } from '../data';
 import { loadCandidates, loadInterviewEvents, loadProfile, saveCandidates, saveInterviewEvents, saveProfile, updateCandidateStatus } from '../storage';
+import { BellRing, CalendarCheck2, UserRoundCheck } from 'lucide-react';
 import type { Candidate, CandidateStatus, CandidateType, InterviewEvent, InterviewLogEntry, InterviewStatus, UserProfile } from '../types';
 import { buildNotifications, type AppNotification } from '../notifications';
+import { APPOINTMENTS_KEY, PROFESSIONAL_OVERRIDES_KEY, loadAppointments, loadOverrides, loadProfessionals, saveOverrides, updateAppointmentStatus } from '../booking/storage';
+import type { AppointmentStatus, Appointment, ProfessionalOverride } from '../booking/types';
+import { dateKey } from '../booking/format';
 
 const moduleCopy: Record<ModuleKey, { eyebrow: string; title: string; subtitle: string }> = {
   candidates: { eyebrow: 'Recrutamento', title: 'Candidatos', subtitle: 'Acompanhe médicos e colaboradores em fluxos separados, sem misturar especialidades clínicas com vagas administrativas e operacionais.' },
@@ -26,6 +31,7 @@ const moduleCopy: Record<ModuleKey, { eyebrow: string; title: string; subtitle: 
   approved: { eyebrow: 'Perfis validados', title: 'Perfis aprovados', subtitle: 'Consulte médicos e colaboradores aprovados para contratação e revise rapidamente as principais informações profissionais.' },
   processes: { eyebrow: 'Fluxo seletivo', title: 'Processos', subtitle: 'Arraste médicos e colaboradores entre as etapas do processo seletivo e acompanhe cada fluxo separadamente.' },
   interviews: { eyebrow: 'Gestão de entrevistas', title: 'Entrevistas', subtitle: 'Controle entrevistas de médicos e colaboradores, com confirmação, reagendamento, cronômetro, logs e histórico.' },
+  consultas: { eyebrow: 'Atendimento ao paciente', title: 'Consultas', subtitle: 'Acompanhe os agendamentos feitos pela página pública, confirme horários e mantenha profissionais e valores sempre atualizados.' },
   agenda: { eyebrow: 'Agenda de recrutamento', title: 'Agenda de entrevistas', subtitle: 'Reserve horários para médicos e colaboradores. Entrevistas concluídas deixam o calendário e permanecem no histórico da Central de Entrevistas.' },
   reports: { eyebrow: 'Indicadores de recrutamento', title: 'Relatórios', subtitle: 'Analise médicos e colaboradores separadamente, com distribuição por etapa, áreas e resultado do processo.' },
   settings: { eyebrow: 'Preferências do portal', title: 'Configurações', subtitle: 'Atualize as informações do usuário e mantenha os dados de acesso da equipe organizados.' }
@@ -39,6 +45,10 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
   const [candidates, setCandidates] = useState<Candidate[]>(() => loadCandidates());
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
   const [interviewEvents, setInterviewEvents] = useState<InterviewEvent[]>(() => loadInterviewEvents());
+  const [appointments, setAppointments] = useState<Appointment[]>(() => loadAppointments());
+  const [overrides, setOverrides] = useState<Record<string, ProfessionalOverride>>(() => loadOverrides());
+  const appointmentsRef = useRef(appointments);
+  appointmentsRef.current = appointments;
   const [active, setActive] = useState<ModuleKey>('candidates');
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_KEY) === '1');
   const [theme, setTheme] = useState<ThemeMode>(() => localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light');
@@ -80,6 +90,14 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
         if (newest?.status === 'novo') setToast(`Novo currículo recebido: ${newest.name}`);
       }
       if (event.key === AGENDA_KEY) setInterviewEvents(loadInterviewEvents());
+      if (event.key === APPOINTMENTS_KEY) {
+        const next = loadAppointments();
+        const known = new Set(appointmentsRef.current.map(item => item.id));
+        const fresh = next.find(item => !known.has(item.id));
+        if (fresh) setToast(`Nova consulta agendada: ${fresh.patient.name} • ${fresh.professionalName}`);
+        setAppointments(next);
+      }
+      if (event.key === PROFESSIONAL_OVERRIDES_KEY) setOverrides(loadOverrides());
     };
     window.addEventListener('storage', syncExternalChanges);
     return () => window.removeEventListener('storage', syncExternalChanges);
@@ -92,7 +110,7 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
   }, [toast]);
 
   const activeCandidate = useMemo(() => selected ? candidates.find(candidate => candidate.id === selected.id) || selected : null, [candidates, selected]);
-  const notifications = useMemo(() => buildNotifications(candidates, interviewEvents, new Date(clockTick)), [candidates, interviewEvents, clockTick]);
+  const notifications = useMemo(() => buildNotifications(candidates, interviewEvents, new Date(clockTick), appointments), [candidates, interviewEvents, clockTick, appointments]);
 
   const openNotification = (notification: AppNotification) => {
     setReadNotificationIds(current => current.includes(notification.id) ? current : [...current, notification.id]);
@@ -216,6 +234,30 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
     setToast(status === 'confirmada' ? 'Entrevista confirmada e perfil enviado para Decisão de contratação.' : status === 'concluida' ? 'Entrevista concluída e removida do calendário.' : 'Status do agendamento atualizado.');
   };
 
+  const handleAppointmentStatus = (id: string, status: AppointmentStatus) => {
+    setAppointments(current => updateAppointmentStatus(current, id, status));
+  };
+
+  const handleSaveOverrides = (next: Record<string, ProfessionalOverride>) => {
+    saveOverrides(next);
+    setOverrides(next);
+  };
+
+  const consultasAside = useMemo<HeroAside>(() => {
+    const today = dateKey(new Date());
+    return {
+      ariaLabel: 'Resumo operacional das consultas',
+      icon: CalendarCheck2,
+      eyebrow: 'VISÃO OPERACIONAL',
+      title: 'Atendimento',
+      items: [
+        { tone: 'review', icon: BellRing, value: appointments.filter(item => item.status === 'agendada').length, label: 'aguardando confirmação' },
+        { tone: 'interview', icon: CalendarCheck2, value: appointments.filter(item => item.date === today && item.status !== 'cancelada').length, label: 'consultas hoje' },
+        { tone: 'approved', icon: UserRoundCheck, value: loadProfessionals(overrides).filter(item => item.active).length, label: 'profissionais ativos' }
+      ]
+    };
+  }, [appointments, overrides]);
+
   const handleSaveProfile = (next: UserProfile) => {
     saveProfile(next);
     setProfile(next);
@@ -236,6 +278,7 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
       case 'interviews': return <Interviews candidates={candidates} events={interviewEvents} onOpenAgenda={(candidateId) => { setAgendaCandidateId(candidateId ?? null); setActive('agenda'); }} onOpenCandidate={setSelected} onSave={handleSaveInterview} onToast={setToast}/>;
       case 'processes': return <><StatCards candidates={candidates}/><ProcessBoard candidates={candidates} onOpen={setSelected} onMove={handleBoardMove}/></>;
       case 'agenda': return <Agenda candidates={candidates} events={interviewEvents} initialCandidateId={agendaCandidateId} onInitialCandidateConsumed={() => setAgendaCandidateId(null)} onSave={handleSaveInterview} onDelete={handleDeleteInterview} onOpenCandidate={setSelected}/>;
+      case 'consultas': return <ConsultasAdmin appointments={appointments} overrides={overrides} onStatus={handleAppointmentStatus} onSaveOverrides={handleSaveOverrides} onToast={setToast}/>;
       case 'reports': return <Reports candidates={candidates}/>;
       case 'settings': return <Settings profile={profile} theme={theme} onThemeChange={setTheme} onSave={handleSaveProfile} onLogout={logout} onPublicApplication={onPublicApplication}/>;
       default: return <><StatCards candidates={candidates}/><CandidateTable candidates={candidates} onOpen={setSelected}/></>;
@@ -255,6 +298,7 @@ export default function Dashboard({ onLogout, onPublicApplication }: Props) {
             candidates={candidates}
             onNewCandidate={active === 'candidates' ? () => setNewOpen(true) : undefined}
             compact={active !== 'candidates'}
+            aside={active === 'consultas' ? consultasAside : undefined}
           />
           <div className="module-content">{renderModule()}</div>
         </main>

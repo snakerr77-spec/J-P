@@ -1,0 +1,64 @@
+/* Módulo "Consultas" do painel. Usa as variáveis dos temas do painel (claro/escuro). */
+@layer legacy {
+  .consultas-module { display: grid; gap: 16px; }
+  .consultas-module .stats-grid { margin: 0; }
+
+  .consultas-link-panel { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 13px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-soft); }
+  .consultas-link-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; color: #0b7c88; background: #e3f6f8; }
+  .consultas-link-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .consultas-link-copy strong { color: var(--text-strong); font-size: 12px; }
+  .consultas-link-copy small { color: var(--text-muted); font-size: 10px; line-height: 1.4; }
+  .consultas-link-copy code { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .consultas-link-actions { display: flex; gap: 6px; }
+  .consultas-module .link-action-button { height: 32px; text-decoration: none; font-size: 10px; white-space: nowrap; }
+  .consultas-module .link-action-button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+  .consultas-tabs { display: inline-flex; gap: 4px; padding: 4px; width: max-content; max-width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow-x: auto; }
+  .consultas-tabs button { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .consultas-tabs button:hover { color: var(--text-strong); }
+  .consultas-tabs button.active { background: var(--surface-2); color: var(--text-strong); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .consultas-tabs em { min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--text-muted); font-size: 9.5px; font-style: normal; text-align: center; }
+
+  .consultas-list { width: 100%; }
+  .consultas-grid { display: grid; grid-template-columns: 118px minmax(0, 1.25fr) minmax(0, 1.15fr) minmax(0, .9fr) 128px minmax(190px, auto); gap: 14px; align-items: center; }
+  .consultas-values-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) 118px 118px 130px 110px 100px; gap: 14px; align-items: center; }
+  .consultas-head { min-height: 40px; padding: 0 17px; color: var(--text-muted); background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 9.5px; font-weight: 800; letter-spacing: .5px; }
+  .consultas-row { min-height: 72px; padding: 12px 17px; border-bottom: 1px solid var(--line); color: var(--text-main); }
+  .consultas-row:last-child { border-bottom: 0; }
+  .consultas-row:hover { background: color-mix(in srgb, var(--surface-2) 70%, var(--surface)); }
+  .consultas-cell { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .consultas-cell strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-size: 11.5px; }
+  .consultas-cell small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 10px; }
+  .consultas-reason { font-style: italic; }
+  .consultas-day-tag { margin-left: 5px; padding: 1px 6px; border-radius: 999px; background: #e3f6f8; color: #075e69; font-size: 9px; font-weight: 800; }
+  .consultas-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+  .consultas-empty { padding: 26px 20px; text-align: center; line-height: 1.5; }
+
+  .consultas-field { display: block; min-width: 0; }
+  .consultas-field-label { display: none; margin-bottom: 4px; color: var(--text-muted); font-size: 9.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; }
+  .consultas-money { width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--input-bg, var(--surface)); color: var(--text-strong); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .consultas-money:focus { outline: 2px solid #0e8f9c; outline-offset: 1px; }
+  .consultas-money.invalid { border-color: #b42318; background: color-mix(in srgb, #b42318 8%, var(--surface)); }
+  .consultas-money::placeholder { color: var(--text-muted); font-weight: 500; }
+  .consultas-switch { display: inline-flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 11px; font-weight: 700; cursor: pointer; }
+  .consultas-switch input { width: 17px; height: 17px; accent-color: #0b7c88; }
+
+  .consultas-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 13px 17px; border-top: 1px solid var(--line); background: var(--surface-2); }
+  .consultas-footer small { max-width: 560px; color: var(--text-muted); font-size: 10px; line-height: 1.5; }
+  .consultas-footer code { padding: 1px 5px; border-radius: 5px; background: var(--surface); font-size: 9.5px; }
+  .consultas-footer-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  @media (max-width: 1180px) {
+    .consultas-head { display: none; }
+    .consultas-grid { grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+    .consultas-values-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; }
+    .consultas-values-grid .doctor-cell { grid-column: 1 / -1; }
+    .consultas-field-label { display: block; }
+    .consultas-actions { grid-column: 1 / -1; justify-content: flex-start; }
+  }
+  @media (max-width: 720px) {
+    .consultas-link-panel { grid-template-columns: 40px minmax(0, 1fr); }
+    .consultas-link-actions { grid-column: 1 / -1; }
+    .consultas-grid { grid-template-columns: 1fr; }
+  }
+}

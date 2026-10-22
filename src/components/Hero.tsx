@@ -1,6 +1,15 @@
 import { motion } from 'framer-motion';
 import { CheckCircle2, FileSearch, Plus, UserRoundSearch, UsersRound } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { Candidate } from '../types';
+
+export type HeroAside = {
+  ariaLabel: string;
+  icon: LucideIcon;
+  eyebrow: string;
+  title: string;
+  items: { tone: 'review' | 'interview' | 'approved'; icon: LucideIcon; value: number | string; label: string }[];
+};
 
 export type HeroProps = {
   eyebrow?: string;
@@ -10,9 +19,11 @@ export type HeroProps = {
   onApplication?: () => void;
   onNewCandidate?: () => void;
   compact?: boolean;
+  /** Substitui o resumo de recrutamento do card lateral (usado em módulos de outras áreas). */
+  aside?: HeroAside;
 };
 
-export default function Hero({ eyebrow = 'Recrutamento médico', title, subtitle, candidates, onApplication, onNewCandidate, compact = false }: HeroProps) {
+export default function Hero({ eyebrow = 'Recrutamento médico', title, subtitle, candidates, onApplication, onNewCandidate, compact = false, aside }: HeroProps) {
   const hasActions = Boolean(onApplication || onNewCandidate);
   const inReview = candidates.filter(candidate => candidate.status === 'analise').length;
   const interviews = candidates.filter(candidate => candidate.status === 'entrevista').length;
@@ -37,16 +48,22 @@ export default function Hero({ eyebrow = 'Recrutamento médico', title, subtitle
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: .42, delay: .04 }}
-        aria-label="Resumo operacional do recrutamento"
+        aria-label={aside?.ariaLabel ?? 'Resumo operacional do recrutamento'}
       >
         <div className="hero-operational-head">
-          <span><UsersRound size={17}/></span>
-          <div><small>VISÃO OPERACIONAL</small><strong>Processo seletivo</strong></div>
+          <span>{aside ? <aside.icon size={17}/> : <UsersRound size={17}/>}</span>
+          <div><small>{aside?.eyebrow ?? 'VISÃO OPERACIONAL'}</small><strong>{aside?.title ?? 'Processo seletivo'}</strong></div>
         </div>
         <div className="hero-operational-list">
-          <div><span className="hero-step-icon review"><FileSearch size={15}/></span><p><strong>{inReview}</strong><small>currículos em análise</small></p></div>
-          <div><span className="hero-step-icon interview"><UserRoundSearch size={15}/></span><p><strong>{interviews}</strong><small>perfis em entrevista</small></p></div>
-          <div><span className="hero-step-icon approved"><CheckCircle2 size={15}/></span><p><strong>{approved}</strong><small>perfis aprovados</small></p></div>
+          {aside ? aside.items.map(item => (
+            <div key={item.label}><span className={`hero-step-icon ${item.tone}`}><item.icon size={15}/></span><p><strong>{item.value}</strong><small>{item.label}</small></p></div>
+          )) : (
+            <>
+              <div><span className="hero-step-icon review"><FileSearch size={15}/></span><p><strong>{inReview}</strong><small>currículos em análise</small></p></div>
+              <div><span className="hero-step-icon interview"><UserRoundSearch size={15}/></span><p><strong>{interviews}</strong><small>perfis em entrevista</small></p></div>
+              <div><span className="hero-step-icon approved"><CheckCircle2 size={15}/></span><p><strong>{approved}</strong><small>perfis aprovados</small></p></div>
+            </>
+          )}
         </div>
       </motion.aside>
 

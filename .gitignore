@@ -27,3 +27,6 @@ pnpm-debug.log*
 # Temporários
 *.tmp
 *.swp
+
+# Gerados pelo tsc -b
+*.tsbuildinfo
