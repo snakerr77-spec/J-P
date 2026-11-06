@@ -28,8 +28,9 @@ export default function ApplicationPage({ profileType }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [fileNames, setFileNames] = useState<Record<string, string>>({});
 
+  // Para médicos todos os documentos são opcionais; colaboradores continuam enviando o currículo.
   const documentFields = profileType === 'medico'
-    ? [...commonDocuments, ...medicalDocuments]
+    ? [...commonDocuments, ...medicalDocuments].map(field => ({ ...field, required: false }))
     : [commonDocuments[0]];
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -148,7 +149,7 @@ export default function ApplicationPage({ profileType }: Props) {
                   <label className="span-2">Disponibilidade *<input name="availability" required placeholder="Ex.: Seg a Sex • Tarde"/></label>
                   <label className="span-2">Resumo profissional<textarea name="summary" rows={4} placeholder="Conte um pouco sobre sua atuação e experiência."/></label>
                 </div>
-                <div className="document-section-title"><span>{isDoctor ? 'DOCUMENTOS' : 'CURRÍCULO'}</span><h3>{isDoctor ? 'Documentação médica' : 'Currículo profissional'}</h3><p>{isDoctor ? 'PDF, JPG ou PNG. Limite de 10 MB por arquivo. Itens marcados com * são obrigatórios.' : 'Envie somente o seu currículo profissional. PDF, JPG ou PNG, com limite de 10 MB.'}</p></div>
+                <div className="document-section-title"><span>{isDoctor ? 'DOCUMENTOS' : 'CURRÍCULO'}</span><h3>{isDoctor ? 'Documentação médica' : 'Currículo profissional'}</h3><p>{isDoctor ? 'PDF, JPG ou PNG. Limite de 10 MB por arquivo. O envio é opcional e pode ser complementado depois.' : 'Envie somente o seu currículo profissional. PDF, JPG ou PNG, com limite de 10 MB.'}</p></div>
                 <div className={`upload-grid ${isDoctor ? '' : 'collaborator-only'}`}>
                   {documentFields.map(field => (
                     <label className="upload-card" key={field.name}>
