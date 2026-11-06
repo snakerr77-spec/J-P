@@ -48,6 +48,20 @@ export type NewCandidateInput = {
   curriculum: string[];
 };
 
+export type PublicApplicationView = {
+  profileType: CandidateType;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  specialty: string;
+  crm: string;
+  rqe: string;
+  experience: string;
+  availability: string;
+  documents: { type: string; label: string; name: string }[];
+};
+
 export type UserProfile = {
   name: string;
   role: string;

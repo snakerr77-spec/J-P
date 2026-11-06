@@ -1,4 +1,4 @@
-import type { Candidate, CandidateStatus, InterviewEvent, NewCandidateInput, NewStaffInput, StaffMember, UpdateStaffInput, UserProfile } from './types';
+import type { Candidate, CandidateStatus, InterviewEvent, NewCandidateInput, NewStaffInput, PublicApplicationView, StaffMember, UpdateStaffInput, UserProfile } from './types';
 
 export class ApiError extends Error {
   status: number;
@@ -62,7 +62,11 @@ export const interviewsApi = {
 };
 
 export const publicApi = {
-  submitApplication: (form: FormData) => apiPost<{ ok: true }>('/api/public/applications', form)
+  submitApplication: (form: FormData) => apiPost<{ ok: true; token: string }>('/api/public/applications', form),
+  getApplication: (token: string) =>
+    apiGet<{ application: PublicApplicationView }>(`/api/public/applications/${encodeURIComponent(token)}`),
+  uploadDocuments: (token: string, form: FormData) =>
+    apiPost<{ ok: true; uploaded: number }>(`/api/public/applications/${encodeURIComponent(token)}/documents`, form)
 };
 
 export const staffApi = {
